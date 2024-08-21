@@ -1,2 +1,2 @@
-# ProgettoICON24
-Repository per il progetto di ICON24.
+# TimeFlix - ICON24
+Repository per il progetto **TimeFlix** del corso di ICON24.

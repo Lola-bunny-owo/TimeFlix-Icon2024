@@ -6,10 +6,11 @@ import seaborn as sns  # per visualizzazioni avanzate
 # Import del dataset
 
 df = pd.read_csv('dataset/netflix_titles.csv')
+
 #### Fase preliminare di analisi esplorativa dei dati (EDA)
 
 # Esplora le prime righe del dataset per assicurarti che sia stato caricato correttamente
-print(df.head())
+print(df.head(10))
 
 ## Colonne
 print("Colonne:", df.columns)
@@ -38,11 +39,25 @@ df['type'].value_counts().plot(kind='bar', title="Movies and TV Shows difference
 plt.show()
 
 # Filtro di selezione dei film
-df_film = df[df['type'] == 'Movie']  # Assumendo che la colonna che distingue i film dalle serie TV si chiami 'type'
+df_film = df[df['type'] == 'Movie'] 
 
-# Crea il diagramma a barre per i rating solo dei film
-df_film['rating'].value_counts().plot(kind='bar', title= "Movies rating")
-plt.show()
+plt.figure(figsize=(12,10))
+ax = sns.countplot(x="rating", data=df_film, palette="Set2", order=df_film['rating'].value_counts().index[0:18])
+ax.set_title("Movies Rating")
+ax.set_ylabel("Number of Movies")
+ax.set_xlabel("Rating Category")
+
+# Filtro di selezione dei Tv Show
+df_show = df[df['type'] == 'TV Show']
+
+plt.figure(figsize=(12,10))
+ax = sns.countplot(x="rating", data=df_show, palette="Set2", order=df_show['rating'].value_counts().index[0:18])
+ax.set_title("Shows Rating")
+ax.set_ylabel("Number of Shows")
+ax.set_xlabel("Rating Category")
+
+
+
 
 ## Feature listed_in da esaminare e lavorarci sopra! È quella del genere per il film / serie tv
 

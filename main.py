@@ -1,60 +1,68 @@
-import pandas as pd # per la manipolazione dei dati
-import matplotlib.pyplot as plt  # per le visualizzazioni grafiche
-import seaborn as sns  # per visualizzazioni avanzate
-from scipy.stats import skew, kurtosis, zscore
-import eda
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import eda  # La libreria eda che hai definito
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
 
-####### 1. Analisi esplorativa dei dati (EDA) ####### 
+####### 1. Analisi esplorativa dei dati (EDA) #######
 
-eda.dataset_info(df)     # Info generali
-print(eda.describe_data(df))     # Descrizione statistica
+# Informazioni generali e descrizione statistica
+eda.dataset_info(df)
+print(eda.describe_data(df))
 
 # Verifica valori mancanti
 print("\nNumero di valori mancanti per colonna:\n", df.isnull().sum())
 
-# Calcola skewness e kurtosis per le colonne release_year e duration, con rispettivi istogrammi
+# Calcolo di skewness e kurtosis per release_year e duration_numeric
 skewness, kurt = eda.calculate_skew_kurtosis(df, 'release_year')
-df['duration_numeric'] = df['duration'].str.extract('(\\d+)').astype(float) # Estrazione della parte numerica dalla colonna duration  
+df['duration_numeric'] = df['duration'].str.extract('(\\d+)').astype(float)
 skewness, kurt = eda.calculate_skew_kurtosis(df, 'duration_numeric')
 
+# Istogrammi per release_year e duration_numeric
 eda.plot_histogram(df, 'release_year')
 eda.plot_histogram(df, 'duration_numeric')
 
-# Grafico a barre per le variabili categoriali
-df['type'].value_counts().plot(kind='bar', title="Movies and TV Shows differences")
+# Grafico a barre per la differenza tra Film e Serie TV
+df['type'].value_counts().plot(kind='bar', title="Movies and TV Shows Differences")
 plt.show()
 
-# Grafici a barre per la distribuzione del numero di film e serie tv per ciascuna categoria di rating
-eda.bar_plot(df, type_value= 'Movie')
-eda.bar_plot(df, type_value= 'TV Show')
+# Grafici a barre per la distribuzione del numero di film e serie TV per rating
+eda.bar_plot(df, type_value='Movie')
+eda.bar_plot(df, type_value='TV Show')
 
-# Outliers trovati nella colonna duration_numeric
-duration_outliers= eda.find_outliers(df, 'duration_numeric')
-print(f"\n Outliers nella colonna duration:\n", duration_outliers)
-print("\n", duration_outliers.describe())
+# Identificazione e descrizione degli outliers per duration_numeric
+duration_outliers = eda.find_outliers(df, 'duration_numeric')
+print(f"\nOutliers nella colonna duration_numeric:\n", duration_outliers.describe())
 
-# Verifica se ci sono duplicati nel dataset
-duplicati = df.duplicated()
+### Grafico dei generi di Film e Serie TV
 
-# Conta il numero di righe duplicate
-numero_duplicati = duplicati.sum()
-print(f"Numero di righe duplicate: {numero_duplicati}")
+def plot_genres_by_type(df, content_type):
+    """
+    Funzione per contare e visualizzare i generi di film o serie TV
+    """
+    genres = df['listed_in'].str.split(', ', expand=True).stack().value_counts()
+    return genres
 
-# Elimina i duplicati nel caso ci siano
-df_cleaned = df.drop_duplicates()
+# Conta i generi di film e serie TV
+films_genres = plot_genres_by_type(df[df['type'] == 'Movie'], 'Film')
+tv_series_genres = plot_genres_by_type(df[df['type'] == 'TV Show'], 'TV Show')
 
-# Controlla la forma del dataset per vedere se ci sono stati cambiamenti
-print(f"Numero di righe nel dataset dopo la rimozione dei duplicati: {df_cleaned.shape[0]}")
+# Combina i generi di film e serie TV in un unico DataFrame
+combined_genres = pd.concat([films_genres, tv_series_genres], axis=1)
+combined_genres.columns = ['Film Genres', 'TV Series Genres']
 
-## Feature listed_in da esaminare e lavorarci sopra! È quella del genere per il film / serie tv
-'''Commenti per elisa, da eliminare: 
-- Se vuoi fai qualche ricerca su Skewness, Kurtosis e Outliers, cercando (per quest'ultimi) come gestirli (eliminandoli oppure ecc..)
-- Se pensi dobbiamo aggiungere altri grafici su altre cose, fai pure tranquillamente!
-- Per l'esecuzione, ti consiglio di eseguire sia con la finestra interattiva (per vedere i plot) e sia normalmente nel terminale,
-che così facendo escono tutti i valori correttamente (ma nel terminale non escono i plot)
-'''
- 
+# Gestisci i valori NaN nel caso un genere sia presente solo nei film o nelle serie TV
+combined_genres.fillna(0, inplace=True)
 
+# Melt il DataFrame combinato per unire le colonne dei generi in una colonna
+combined_genres = combined_genres.reset_index().melt(id_vars='index', var_name='Genre Type', value_name='Count')
+
+# Plot dei generi combinati
+plt.figure(figsize=(12, 6))
+sns.barplot(x='Count', y='index', hue='Genre Type', data=combined_genres, palette='viridis')
+plt.title('Film and TV Series Genres Differences')
+plt.xlabel('Count')
+plt.ylabel('Genre')
+plt.show()

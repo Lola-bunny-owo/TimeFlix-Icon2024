@@ -61,7 +61,7 @@ def bar_plot(df, type_value):
     
     # Crea il bar plot
     plt.figure(figsize=(12,10))
-    ax = sns.countplot(x="rating", data=df_selection, palette="Set2", order=df_selection['rating'].value_counts().index[0:18])
+    ax = sns.countplot(x="rating", data=df_selection, palette="Set2", order=df_selection['rating'].value_counts().index[0:12])
     ax.set_title(f"{type_value} Rating")
     ax.set_ylabel(f"Number of {type_value}s")
     ax.set_xlabel("Rating Category")

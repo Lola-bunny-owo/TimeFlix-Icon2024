@@ -17,7 +17,7 @@ print("\nNumero di valori mancanti per colonna:\n", df.isnull().sum())
 
 # Calcola skewness e kurtosis per le colonne release_year e duration, con rispettivi istogrammi
 skewness, kurt = eda.calculate_skew_kurtosis(df, 'release_year')
-df['duration_numeric'] = df['duration'].str.extract('(\d+)').astype(float) # Estrazione della parte numerica dalla colonna duration  
+df['duration_numeric'] = df['duration'].str.extract('(\\d+)').astype(float) # Estrazione della parte numerica dalla colonna duration  
 skewness, kurt = eda.calculate_skew_kurtosis(df, 'duration_numeric')
 
 eda.plot_histogram(df, 'release_year')
@@ -36,6 +36,19 @@ duration_outliers= eda.find_outliers(df, 'duration_numeric')
 print(f"\n Outliers nella colonna duration:\n", duration_outliers)
 print("\n", duration_outliers.describe())
 
+# Verifica se ci sono duplicati nel dataset
+duplicati = df.duplicated()
+
+# Conta il numero di righe duplicate
+numero_duplicati = duplicati.sum()
+print(f"Numero di righe duplicate: {numero_duplicati}")
+
+# Elimina i duplicati nel caso ci siano
+df_cleaned = df.drop_duplicates()
+
+# Controlla la forma del dataset per vedere se ci sono stati cambiamenti
+print(f"Numero di righe nel dataset dopo la rimozione dei duplicati: {df_cleaned.shape[0]}")
+
 ## Feature listed_in da esaminare e lavorarci sopra! È quella del genere per il film / serie tv
 '''Commenti per elisa, da eliminare: 
 - Se vuoi fai qualche ricerca su Skewness, Kurtosis e Outliers, cercando (per quest'ultimi) come gestirli (eliminandoli oppure ecc..)
@@ -43,5 +56,5 @@ print("\n", duration_outliers.describe())
 - Per l'esecuzione, ti consiglio di eseguire sia con la finestra interattiva (per vedere i plot) e sia normalmente nel terminale,
 che così facendo escono tutti i valori correttamente (ma nel terminale non escono i plot)
 '''
-
+ 
 

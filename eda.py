@@ -27,7 +27,7 @@ def describe_data(df):
 def calculate_skew_kurtosis(df, column):
     skewness = skew(df[column].dropna())
     kurt = kurtosis(df[column].dropna())
-    print(f"\nAsimmetria di {column}: {skewness}, Curtosi di {column}: {kurt}")
+    print(f"\nSkewness di {column}: {skewness}, Kurtosis di {column}: {kurt}")
     return skewness, kurt
 
 # Funzione per identificare gli outliers in una colonna utilizzando lo Z-score
@@ -71,3 +71,31 @@ def bar_plot(df, type_value):
 # Funzione per la verifica dei valori mancanti per una colonna specifica
 def null_values(df, column):
     return df[column].isnull().sum()
+
+## Funzione per contare e visualizzare i generi di film o serie TV
+def plot_genres_by_type(df, content_type):
+    genres = df['listed_in'].str.split(', ', expand=True).stack().value_counts()
+    return genres
+
+## Funzione per gestire skewness: se è troppo alta (> 1), applica una trasformazione logaritmica
+def manage_skew(df, skew, kurt, column):
+
+    if abs(skew) > 1:
+        print(f"La skewness di {column} è elevata: {skew}. Applico una trasformazione logaritmica.")
+        df[column] = np.log1p(df[column])  # Trasformazione logaritmica
+        print("Valori dopo la trasformazione:")
+        skew, kurt = calculate_skew_kurtosis(df, column)
+        return skew, kurt
+    else:
+        print(f"La skewness di {column} non è elevata. Valori in regola.")
+        return skew, kurt
+
+## Funzione per gestire la kurtosis: se è elevata (> 3), potrebbe indicare la presenza di outliers significativi
+def manage_kurt(kurt, column):
+    if kurt > 3:
+        print(f"La kurtosis di {column} è elevata: {kurt}. Potrebbero esserci outliers significativi!")
+    else:
+        print(f"La kurtosis di {column} non è elevata. Valori in regola.")
+
+## Funzione per la creazione di 
+        

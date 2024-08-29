@@ -99,9 +99,10 @@ def prepare_duration_columns(df):
     df['duration_numeric_film'] = pd.to_numeric(df['duration_numeric_film'], errors='coerce')
     df['duration_numeric_shows'] = pd.to_numeric(df['duration_numeric_shows'], errors='coerce')
 
+
 # Funzione per calcolare la skewness (asimmetria) e la curtosi di una colonna del dataset
 def calculate_skew_kurtosis(df, column):
-    skewness = skew(df[column].dropna())
+    skewness = skew(df[column].dropna()) #Ignora i valori nulli o NaN con dropna()
     kurt = kurtosis(df[column].dropna())
     print(f"\nSkewness di {column}: {skewness}, Kurtosis di {column}: {kurt}")
     return skewness, kurt
@@ -133,7 +134,7 @@ def find_outliers(df, column):
     df_clean['z_score'] = zscore(df_clean[column])  # Calcola lo Z-score
 
     # Filtra i dati per ottenere solo gli outlier
-    outliers = df_clean[df_clean['z_score'].abs() > 3][[column, 'z_score']]
+    outliers = df_clean[df_clean['z_score'].abs() > 3][[column, 'z_score', 'title']]
     return outliers   
 
 # Funzione per la verifica dei valori mancanti per una colonna specifica
@@ -166,3 +167,21 @@ def null_unique_values(df, columns):
         }
 
     return results
+
+# Funzione per la gestione degli outliers in  base alla colonna specificata.
+# Se la colonna è 'duration_numeric_film', rimuove i film con durata superiore a 210 minuti.
+# Se la colonna è 'duration_numeric_shows', rimuove le serie TV con più di 10 stagioni.
+def manage_outliers(df, column):
+    
+    if column == 'duration_numeric_film':
+        # Filtra i film con durata superiore a 210 minuti
+        df = df[df[column] <= 210]
+    
+    elif column == 'duration_numeric_shows':
+        # Filtra le serie TV con più di 10 stagioni
+        df = df[df[column] <= 10]
+    
+    else:
+        print(f"Colonna '{column}' non supportata per la gestione degli outliers.")
+    
+    return df

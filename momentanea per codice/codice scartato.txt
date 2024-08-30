@@ -1,0 +1,97 @@
+# Funzione per identificare gli outliers in una colonna utilizzando lo Z-score
+def find_outliers(df, column):
+    
+    # Elimina valori nulli nella colonna specificata
+    df_clean = df.dropna(subset=[column]).copy()  # Usa una copia per evitare SettingWithCopyWarning
+    df_clean['z_score'] = zscore(df_clean[column])  # Calcola lo Z-score
+
+    # Filtra i dati per ottenere solo gli outlier
+    outliers = df_clean[df_clean['z_score'].abs() > 3][[column, 'z_score', 'title']]
+    return outliers 
+
+
+# Funzione per la gestione degli outliers in  base alla colonna specificata.
+# Se la colonna è 'duration_numeric_film', rimuove i film con durata superiore a 210 minuti.
+# Se la colonna è 'duration_numeric_shows', rimuove le serie TV con più di 10 stagioni.
+# NON CAPISCO PERCHè FILTRA MALEEEEEEEEEEEEEEE
+def manage_outliers(dataframe, target_column, film_threshold=250, show_threshold=15):
+    """Gestisce gli outliers in base alla colonna specificata."""
+    if target_column not in dataframe.columns:
+        print(f"Errore: la colonna '{target_column}' non esiste nel DataFrame.")
+        return dataframe
+    
+    initial_row_count = dataframe.shape[0]
+
+    if target_column == 'duration_numeric_film':
+        filtered_dataframe = dataframe[dataframe[target_column] <= film_threshold].copy()
+    elif target_column == 'duration_numeric_shows':
+        filtered_dataframe = dataframe[dataframe[target_column] <= show_threshold].copy()
+    else:
+        print(f"Colonna '{target_column}' non supportata per la gestione degli outliers.")
+        return dataframe
+    
+    final_row_count = filtered_dataframe.shape[0]
+    rows_filtered = initial_row_count - final_row_count
+    print(f"Filtrate {rows_filtered} righe dalla colonna '{target_column}'.")
+
+    return filtered_dataframe
+
+
+'''Identificazione e descrizione degli outliers per duration_numeric_film e duration_numeric_shows  - versione con Z-Score, da
+eventualmente eliminare una volta fatta la review.
+
+duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film')
+print(f"\nOutliers nella colonna duration_numeric_film:\n", duration_film_outliers)
+duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows')
+print(f"\nOutliers nella colonna duration_numeric_shows:\n", duration_shows_outliers)
+'''
+
+'''
+film_threshold = df['duration_numeric_film'].quantile(0.99)
+show_threshold = df['duration_numeric_shows'].quantile(0.99)
+
+print(f"Soglia per i film (99° percentile): {film_threshold}")
+print(f"Soglia per le serie TV (99° percentile): {show_threshold}")
+
+print("Film che verrebbero rimossi:\n", df[df['duration_numeric_film'] > film_threshold][['title', 'duration_numeric_film']])
+print("Serie TV che verrebbero rimosse:\n", df[df['duration_numeric_shows'] > show_threshold][['title', 'duration_numeric_shows']])
+
+# Gestione degli outliers usando le soglie calcolate dai percentili
+# NON FUNZIONA - verificare manage_outliers
+df = eda.manage_outliers(df, 'duration_numeric_film', film_threshold=film_threshold)
+df = eda.manage_outliers(df, 'duration_numeric_shows', show_threshold=show_threshold)
+
+# Verifica degli outliers rimanenti dopo la gestione
+duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film')
+print(f"\nOutliers sui film aggiornati - rimossi i film di durata > {film_threshold} minuti:\n", duration_film_outliers)
+duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows')
+print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {show_threshold} :\n", duration_shows_outliers)
+'''
+
+# Funzione che calcola i valori unici e non nulli per ciascuna colonna specificata, dove:
+# - columns è una lista dei nomi delle colonne da analizzare
+# - results è un dizionario contenente il numero di valori unici e non nulli per ciascuna colonna
+def null_unique_values(df, columns):
+    results = {}
+
+    for column in columns:
+        # Calcola i valori unici e non nulli per la colonna corrente
+        unique_values = df[column].nunique(dropna=True)  # Valori unici ignorando i NaN
+        non_null_count = df[column].notna().sum()        # Numero di valori non nulli
+        null_count= df[column].isna().sum()
+
+        # Stampa i risultati per la colonna corrente
+        print(f"Colonna: {column}")
+        print(f" - Valori unici: {unique_values}")
+        print(f" - Valori nulli: {null_count}")
+        print(f" - Valori non nulli: {non_null_count}")
+
+        # Salva i risultati in un dizionario
+        results[column] = {
+            'unique_values': unique_values,
+            'non_null_count': non_null_count,
+            'null_count': null_count,
+        }
+
+    return results
+

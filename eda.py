@@ -124,79 +124,61 @@ def manage_kurt(kurt, column):
     if kurt > 3:
         print(f"La kurtosis di {column} è elevata: {kurt}. Potrebbero esserci outliers significativi!")
     else:
-        print(f"La kurtosis di {column} non è elevata. Valori in regola.")
+        print(f"La kurtosis di {column} non è elevata. Valori in regola.") 
 
-# Funzione per identificare gli outliers in una colonna utilizzando lo Z-score
-def find_outliers(df, column):
+# Funzione per identificare gli outliers in una colonna basandosi sul calcolo del percentile (°99)
+def find_outliers(df, column, percentile= 0.99):
     
     # Elimina valori nulli nella colonna specificata
-    df_clean = df.dropna(subset=[column]).copy()  # Usa una copia per evitare SettingWithCopyWarning
-    df_clean['z_score'] = zscore(df_clean[column])  # Calcola lo Z-score
-
+    df_clean = df.dropna(subset=[column]).copy()  # Usa una copia per evitare SettingWithCopyWarning    
+    
+    # Calcola il threshold basato sul percentile specificato
+    threshold = df_clean[column].quantile(percentile)
+    
     # Filtra i dati per ottenere solo gli outlier
-    outliers = df_clean[df_clean['z_score'].abs() > 3][[column, 'z_score', 'title']]
-    return outliers   
+    outliers = df_clean[df_clean[column] > threshold][[column, 'title']]
+    outliers['threshold'] = threshold  # Aggiunge la soglia per riferimento
+    print(f"\nNumero di outliers della colonna {column}: {len(outliers)}")
+    return outliers
+
+# Funzione per la gestione degli outliers attraverso le soglie manuali
+def manage_outliers(df, outliers_df, column, manual_threshold):
+    # Filtra gli outliers che superano la soglia manuale
+    outliers_to_remove = outliers_df[outliers_df[column] > manual_threshold]
+    
+    # Rimuove gli outliers dal DataFrame originale
+    df_filtered = df[~df.index.isin(outliers_to_remove.index)].copy()
+    
+    # Informazioni sugli outliers rimossi
+    print(f"\nRimossi {len(outliers_to_remove)} outliers dalla colonna '{column}' con soglia manuale > {manual_threshold}.")
+    
+    return df_filtered
+
 
 # Funzione per la verifica dei valori mancanti per una colonna specifica
 def null_values(df, column):
     return df[column].isnull().sum()
 
-# Funzione che calcola i valori unici e non nulli per ciascuna colonna specificata, dove:
-# - columns è una lista dei nomi delle colonne da analizzare
-# - results è un dizionario contenente il numero di valori unici e non nulli per ciascuna colonna
-def null_unique_values(df, columns):
-    results = {}
+# Funzione per la stampa dei valori nulli
+def print_null_values(df, columns_to_exclude):
+    print("\nNumero di valori mancanti per colonna:\n", df.drop(columns= columns_to_exclude).isnull().sum())
+    print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato è null:\n",
+          df.drop(columns= columns_to_exclude).isnull().head(10))
 
-    for column in columns:
-        # Calcola i valori unici e non nulli per la colonna corrente
-        unique_values = df[column].nunique(dropna=True)  # Valori unici ignorando i NaN
-        non_null_count = df[column].notna().sum()        # Numero di valori non nulli
-        null_count= df[column].isna().sum()
-
-        # Stampa i risultati per la colonna corrente
-        print(f"Colonna: {column}")
-        print(f" - Valori unici: {unique_values}")
-        print(f" - Valori nulli: {null_count}")
-        print(f" - Valori non nulli: {non_null_count}")
-
-        # Salva i risultati in un dizionario
-        results[column] = {
-            'unique_values': unique_values,
-            'non_null_count': non_null_count,
-            'null_count': null_count,
-        }
-
-    return results
-
-# Funzione per la gestione degli outliers in  base alla colonna specificata.
-# Se la colonna è 'duration_numeric_film', rimuove i film con durata superiore a 210 minuti.
-# Se la colonna è 'duration_numeric_shows', rimuove le serie TV con più di 10 stagioni.
-# NON CAPISCO PERCHè FILTRA MALEEEEEEEEEEEEEEE
-def manage_outliers(dataframe, target_column, film_threshold=250, show_threshold=15):
-    """Gestisce gli outliers in base alla colonna specificata."""
-    if target_column not in dataframe.columns:
-        print(f"Errore: la colonna '{target_column}' non esiste nel DataFrame.")
-        return dataframe
+# Funzione per la gestione dei valori nulli
+def manage_null_values(df):
+    # Sostituzione dei valori nulli nelle colonne specificate con "Unknown"
+    df['director'] = df['director'].fillna('Unknown')
+    df['country'] = df['country'].fillna('Unknown')
+    df['date_added'] = df['date_added'].fillna('Unknown')
+    df['cast'] = df['cast'].fillna('Unknown')
     
-    initial_row_count = dataframe.shape[0]
-
-    if target_column == 'duration_numeric_film':
-        filtered_dataframe = dataframe[dataframe[target_column] <= film_threshold].copy()
-    elif target_column == 'duration_numeric_shows':
-        filtered_dataframe = dataframe[dataframe[target_column] <= show_threshold].copy()
-    else:
-        print(f"Colonna '{target_column}' non supportata per la gestione degli outliers.")
-        return dataframe
+    # Per la colonna 'rating', possiamo sostituire i valori nulli con 'Not Rated' o 'Unknown'
+    df['rating'] = df['rating'].fillna('Not Rated')
     
-    final_row_count = filtered_dataframe.shape[0]
-    rows_filtered = initial_row_count - final_row_count
-    print(f"Filtrate {rows_filtered} righe dalla colonna '{target_column}'.")
+    # Per la colonna 'duration', eliminiamo le righe in cui ci sono i valori nulli (quantità irrisoria)
+    df = df.dropna(subset=['duration'])
 
-    return filtered_dataframe
-
-
-
-
-
+    return df
 
 

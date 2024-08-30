@@ -35,69 +35,39 @@ eda.manage_kurt(kurt_film, 'duration_numeric_film')
 eda.plot_histogram(df, 'duration_numeric_film')
 eda.plot_histogram(df, 'duration_numeric_shows')
 
-# Identificazione e descrizione degli outliers per duration_numeric_film e duration_numeric_shows
-duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film')
+
+# Trova gli outliers per i film e le serie TV usando i percentili
+print(f"Soglia impostata per gli outliers di 'duration_numeric_film' (99° percentile): ", df['duration_numeric_film'].quantile(0.99))
+duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film', percentile=0.99)
 print(f"\nOutliers nella colonna duration_numeric_film:\n", duration_film_outliers)
-duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows')
+print(f"Soglia impostata per gli outliers di 'duration_numeric_shows' (99° percentile): ", df['duration_numeric_shows'].quantile(0.99))
+duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows', percentile=0.99)
 print(f"\nOutliers nella colonna duration_numeric_shows:\n", duration_shows_outliers)
 
 # Identificazione e stampa del numero di valori mancanti per tutte le colonne eccetto quelle escluse
-
 columns_to_exclude = ['duration_numeric_shows', 'duration_numeric_film', 'duration_numeric'] # Specifica le colonne da escludere
-print("\nNumero di valori mancanti per colonna:\n", df.drop(columns= columns_to_exclude).isnull().sum())
-print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato è null:\n",
-      df.drop(columns= columns_to_exclude).isnull().head(10))
+eda.print_null_values(df, columns_to_exclude)
 
+####### 2. PREPROCESSING  #######  
 
-print("\nDescrizione statistica delle colonne 'duration_numeric_film' e 'duration_numeric_shows':\n")
-print(df['duration_numeric_film'].describe())
-print(df['duration_numeric_shows'].describe())
+# Imposta le soglie manuali per la rimozione degli outliers
+manual_film_threshold = 210  # Soglia manuale per la durata dei film
+manual_show_threshold = 10   # Soglia manuale per il numero di stagioni delle serie TV
 
-
-
-####### 2. PREPROCESSING  #######
-
-# Calcolo delle soglie basate sui percentili
-film_threshold = df['duration_numeric_film'].quantile(0.99)
-show_threshold = df['duration_numeric_shows'].quantile(0.99)
-
-print(f"Soglia per i film (99° percentile): {film_threshold}")
-print(f"Soglia per le serie TV (99° percentile): {show_threshold}")
-
-print("Film che verrebbero rimossi:\n", df[df['duration_numeric_film'] > film_threshold][['title', 'duration_numeric_film']])
-print("Serie TV che verrebbero rimosse:\n", df[df['duration_numeric_shows'] > show_threshold][['title', 'duration_numeric_shows']])
-
-# Gestione degli outliers usando le soglie calcolate dai percentili
-# NON FUNZIONA - verificare manage_outliers
-df = eda.manage_outliers(df, 'duration_numeric_film', film_threshold=film_threshold)
-df = eda.manage_outliers(df, 'duration_numeric_shows', show_threshold=show_threshold)
+# Gestione degli outliers utilizzando le soglie manuali
+df = eda.manage_outliers(df, duration_film_outliers, 'duration_numeric_film', manual_threshold=manual_film_threshold)
+df = eda.manage_outliers(df, duration_shows_outliers, 'duration_numeric_shows', manual_threshold=manual_show_threshold)
 
 # Verifica degli outliers rimanenti dopo la gestione
-duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film')
-print(f"\nOutliers sui film aggiornati - rimossi i film di durata > {film_threshold} minuti:\n", duration_film_outliers)
-duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows')
-print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {show_threshold} :\n", duration_shows_outliers)
+updated_film_outliers = eda.find_outliers(df, 'duration_numeric_film', percentile=0.99)
+#print(f"\nOutliers sui film aggiornati - rimossi i film di durata > {manual_film_threshold} minuti:\n", updated_film_outliers)
+updated_show_outliers = eda.find_outliers(df, 'duration_numeric_shows', percentile=0.99)
+#print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {manual_show_threshold}:\n", updated_show_outliers)
 
-
-# Gestione dei valori nulli
-# Sostituzione dei valori nulli nelle colonne specificate con "Unknown"
-df['director'] = df['director'].fillna('Unknown')
-df['country'] = df['country'].fillna('Unknown')
-df['date_added'] = df['date_added'].fillna('Unknown')
-
-# Gestione della colonna 'cast': al momento rimuoviamo le righe con valori nulli o sconosciuti
-df['cast'] = df['cast'].fillna('Unknown')
-
-# Per la colonna 'rating', possiamo sostituire i valori nulli con 'Not Rated' o 'Unknown'
-df['rating'] = df['rating'].fillna('Not Rated')
-
-# Gestione dei duplicati
+# Gestione dei valori nulli e dei duplicati
+df = eda.manage_null_values(df)
 df.drop_duplicates(inplace=True)
 
-### PROVA DI GESTIONE DEI VALORI
-
-# Verifica finale dei valori nulli
-print("\nNumero di valori mancanti per colonna dopo il preprocessing:\n", df.isnull().sum())
-
-# Stampa delle prime righe del dataset pulito
-print("\nPrime 10 righe del dataset dopo il preprocessing:\n", df.head(10))
+# Verifica finale dei valori nulli e verifica del dataset per tutte le colonne eccetto quelle escluse
+eda.print_null_values(df, columns_to_exclude)
+print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(10))

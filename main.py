@@ -49,29 +49,55 @@ print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cu
       df.drop(columns= columns_to_exclude).isnull().head(10))
 
 
+print("\nDescrizione statistica delle colonne 'duration_numeric_film' e 'duration_numeric_shows':\n")
+print(df['duration_numeric_film'].describe())
+print(df['duration_numeric_shows'].describe())
+
+
+
 ####### 2. PREPROCESSING  #######
 
-# Gestione degli outliers - Non funziona! TO-FIX
-# Praticamente, la funzione manage_outliers (nel eda.py) è una funzione che gestisce gli outliers come abbiamo già detto:
-#  1) Filtra (dagli otuliers dei film e da quelli delle serie tv) film di durata > 3h30 (210) e serie tv di #stagioni > 10.
-#  2) Elimina quei dati che superano quelle condizioni e riaggiorna gli outliers, rimanendo con gli outliers "corretti"
-#  ..  che, di conseguenza, sono gli outliers che abbiamo deciso di non gestire e conservare nel dataset.
-# Penso che qui il codice sia abbastanza chiaro poi, ma nel processo c'è qualcosa che non funziona..
-# Quindi, se riesci alla fine dovremmo stampare queste due righe che vedi sugli outliers aggiornati
+# Calcolo delle soglie basate sui percentili
+film_threshold = df['duration_numeric_film'].quantile(0.99)
+show_threshold = df['duration_numeric_shows'].quantile(0.99)
 
-df = eda.manage_outliers(df, 'duration_numeric_film')
-df = eda.manage_outliers(df, 'duration_numeric_shows')
+print(f"Soglia per i film (99° percentile): {film_threshold}")
+print(f"Soglia per le serie TV (99° percentile): {show_threshold}")
+
+print("Film che verrebbero rimossi:\n", df[df['duration_numeric_film'] > film_threshold][['title', 'duration_numeric_film']])
+print("Serie TV che verrebbero rimosse:\n", df[df['duration_numeric_shows'] > show_threshold][['title', 'duration_numeric_shows']])
+
+# Gestione degli outliers usando le soglie calcolate dai percentili
+# NON FUNZIONA - verificare manage_outliers
+df = eda.manage_outliers(df, 'duration_numeric_film', film_threshold=film_threshold)
+df = eda.manage_outliers(df, 'duration_numeric_shows', show_threshold=show_threshold)
+
+# Verifica degli outliers rimanenti dopo la gestione
 duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film')
-print(f"\nOutliers sui film aggiornati - rimossi i film di durata > 3h30m :\n", duration_film_outliers)
+print(f"\nOutliers sui film aggiornati - rimossi i film di durata > {film_threshold} minuti:\n", duration_film_outliers)
 duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows')
-print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > 10 :\n", duration_shows_outliers)
-
-# Gestione dei valori nulli - È ancora da implementare, ma abbiamo già discusso su come fare
-# Per le colonne director e country possiamo sostituire quei valori nulli con dati "Unknown", in quanto non ci servono molto al nostro fine.
-# La colonna cast potrebbe servirci, quindi potremmo scegliere di eliminare le righe in cui il cast è vuoto o sconosciuto.
-# .. oppure troviamo un altro modo per gestirli
-# Anche la colonna date_added non c'interessa, quindi possiamo sostituirli con dati "Unknown". Per la colonna rating non so.
-
-# Gestione dei duplicati - Penso sia abbastanza semplice; si eliminano i duplicati lol
+print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {show_threshold} :\n", duration_shows_outliers)
 
 
+# Gestione dei valori nulli
+# Sostituzione dei valori nulli nelle colonne specificate con "Unknown"
+df['director'] = df['director'].fillna('Unknown')
+df['country'] = df['country'].fillna('Unknown')
+df['date_added'] = df['date_added'].fillna('Unknown')
+
+# Gestione della colonna 'cast': al momento rimuoviamo le righe con valori nulli o sconosciuti
+df['cast'] = df['cast'].fillna('Unknown')
+
+# Per la colonna 'rating', possiamo sostituire i valori nulli con 'Not Rated' o 'Unknown'
+df['rating'] = df['rating'].fillna('Not Rated')
+
+# Gestione dei duplicati
+df.drop_duplicates(inplace=True)
+
+### PROVA DI GESTIONE DEI VALORI
+
+# Verifica finale dei valori nulli
+print("\nNumero di valori mancanti per colonna dopo il preprocessing:\n", df.isnull().sum())
+
+# Stampa delle prime righe del dataset pulito
+print("\nPrime 10 righe del dataset dopo il preprocessing:\n", df.head(10))

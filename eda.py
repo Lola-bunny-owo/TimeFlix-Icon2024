@@ -43,7 +43,7 @@ def plot_histogram(df, column):
 # Funzione per la creazione di bar plot 
 def bar_plot(df, type_value):
     
-    # Filtra il DataFrame in base al tipo specificato
+    # Filtra il df in base al tipo specificato
     df_selection= df[df['type'] == type_value]
     
     # Crea il bar plot
@@ -66,14 +66,14 @@ def plot_combined_genres_by_type(df):
     films_genres = plot_genres_by_type(df[df['type'] == 'Movie'], 'Film')
     tv_series_genres = plot_genres_by_type(df[df['type'] == 'TV Show'], 'TV Show')
 
-    # Combina i generi di film e serie TV in un unico DataFrame
+    # Combina i generi di film e serie TV in un unico df
     combined_genres = pd.concat([films_genres, tv_series_genres], axis=1)
     combined_genres.columns = ['Film Genres', 'TV Series Genres']
 
     # Gestisci i valori NaN nel caso un genere sia presente solo nei film o nelle serie TV
     combined_genres.fillna(0, inplace=True)
 
-    # Melt il DataFrame combinato per unire le colonne dei generi in una colonna
+    # Melt il df combinato per unire le colonne dei generi in una colonna
     combined_genres = combined_genres.reset_index().melt(id_vars='index', var_name='Genre Type', value_name='Count')
 
     # Plot dei generi combinati
@@ -171,17 +171,32 @@ def null_unique_values(df, columns):
 # Funzione per la gestione degli outliers in  base alla colonna specificata.
 # Se la colonna è 'duration_numeric_film', rimuove i film con durata superiore a 210 minuti.
 # Se la colonna è 'duration_numeric_shows', rimuove le serie TV con più di 10 stagioni.
-def manage_outliers(df, column):
+# NON CAPISCO PERCHè FILTRA MALEEEEEEEEEEEEEEE
+def manage_outliers(dataframe, target_column, film_threshold=250, show_threshold=15):
+    """Gestisce gli outliers in base alla colonna specificata."""
+    if target_column not in dataframe.columns:
+        print(f"Errore: la colonna '{target_column}' non esiste nel DataFrame.")
+        return dataframe
     
-    if column == 'duration_numeric_film':
-        # Filtra i film con durata superiore a 210 minuti
-        df = df[df[column] <= 210]
-    
-    elif column == 'duration_numeric_shows':
-        # Filtra le serie TV con più di 10 stagioni
-        df = df[df[column] <= 10]
-    
+    initial_row_count = dataframe.shape[0]
+
+    if target_column == 'duration_numeric_film':
+        filtered_dataframe = dataframe[dataframe[target_column] <= film_threshold].copy()
+    elif target_column == 'duration_numeric_shows':
+        filtered_dataframe = dataframe[dataframe[target_column] <= show_threshold].copy()
     else:
-        print(f"Colonna '{column}' non supportata per la gestione degli outliers.")
+        print(f"Colonna '{target_column}' non supportata per la gestione degli outliers.")
+        return dataframe
     
-    return df
+    final_row_count = filtered_dataframe.shape[0]
+    rows_filtered = initial_row_count - final_row_count
+    print(f"Filtrate {rows_filtered} righe dalla colonna '{target_column}'.")
+
+    return filtered_dataframe
+
+
+
+
+
+
+

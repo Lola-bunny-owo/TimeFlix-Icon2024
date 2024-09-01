@@ -99,7 +99,6 @@ def prepare_duration_columns(df):
     df['duration_numeric_film'] = pd.to_numeric(df['duration_numeric_film'], errors='coerce')
     df['duration_numeric_shows'] = pd.to_numeric(df['duration_numeric_shows'], errors='coerce')
 
-
 # Funzione per calcolare la skewness (asimmetria) e la curtosi di una colonna del dataset
 def calculate_skew_kurtosis(df, column):
     skewness = skew(df[column].dropna()) #Ignora i valori nulli o NaN con dropna()
@@ -141,44 +140,5 @@ def find_outliers(df, column, percentile= 0.99):
     print(f"\nNumero di outliers della colonna {column}: {len(outliers)}")
     return outliers
 
-# Funzione per la gestione degli outliers attraverso le soglie manuali
-def manage_outliers(df, outliers_df, column, manual_threshold):
-    # Filtra gli outliers che superano la soglia manuale
-    outliers_to_remove = outliers_df[outliers_df[column] > manual_threshold]
-    
-    # Rimuove gli outliers dal DataFrame originale
-    df_filtered = df[~df.index.isin(outliers_to_remove.index)].copy()
-    
-    # Informazioni sugli outliers rimossi
-    print(f"\nRimossi {len(outliers_to_remove)} outliers dalla colonna '{column}' con soglia manuale > {manual_threshold}.")
-    
-    return df_filtered
-
-
-# Funzione per la verifica dei valori mancanti per una colonna specifica
-def null_values(df, column):
-    return df[column].isnull().sum()
-
-# Funzione per la stampa dei valori nulli
-def print_null_values(df, columns_to_exclude):
-    print("\nNumero di valori mancanti per colonna:\n", df.drop(columns= columns_to_exclude).isnull().sum())
-    print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato è null:\n",
-          df.drop(columns= columns_to_exclude).isnull().head(10))
-
-# Funzione per la gestione dei valori nulli
-def manage_null_values(df):
-    # Sostituzione dei valori nulli nelle colonne specificate con "Unknown"
-    df['director'] = df['director'].fillna('Unknown')
-    df['country'] = df['country'].fillna('Unknown')
-    df['date_added'] = df['date_added'].fillna('Unknown')
-    df['cast'] = df['cast'].fillna('Unknown')
-    
-    # Per la colonna 'rating', possiamo sostituire i valori nulli con 'Not Rated' o 'Unknown'
-    df['rating'] = df['rating'].fillna('Not Rated')
-    
-    # Per la colonna 'duration', eliminiamo le righe in cui ci sono i valori nulli (quantità irrisoria)
-    df = df.dropna(subset=['duration'])
-
-    return df
 
 

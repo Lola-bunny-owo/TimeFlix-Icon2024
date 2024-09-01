@@ -1,8 +1,7 @@
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import eda 
+import preprocessing
 from gensim.models import Word2Vec
 
 # Import del dataset
@@ -47,7 +46,7 @@ print(f"\nOutliers nella colonna duration_numeric_shows:\n", duration_shows_outl
 
 # Identificazione e stampa del numero di valori mancanti per tutte le colonne eccetto quelle escluse
 columns_to_exclude = ['duration_numeric_shows', 'duration_numeric_film', 'duration_numeric'] # Specifica le colonne da escludere
-eda.print_null_values(df, columns_to_exclude)
+preprocessing.print_null_values(df, columns_to_exclude)
 
 ####### 2. PREPROCESSING  #######  
 
@@ -56,8 +55,8 @@ manual_film_threshold = 210  # Soglia manuale per la durata dei film
 manual_show_threshold = 10   # Soglia manuale per il numero di stagioni delle serie TV
 
 # Gestione degli outliers utilizzando le soglie manuali
-df = eda.manage_outliers(df, duration_film_outliers, 'duration_numeric_film', manual_threshold=manual_film_threshold)
-df = eda.manage_outliers(df, duration_shows_outliers, 'duration_numeric_shows', manual_threshold=manual_show_threshold)
+df = preprocessing.manage_outliers(df, duration_film_outliers, 'duration_numeric_film', manual_threshold=manual_film_threshold)
+df = preprocessing.manage_outliers(df, duration_shows_outliers, 'duration_numeric_shows', manual_threshold=manual_show_threshold)
 
 # Verifica degli outliers rimanenti dopo la gestione
 updated_film_outliers = eda.find_outliers(df, 'duration_numeric_film', percentile=0.99)
@@ -66,49 +65,26 @@ updated_show_outliers = eda.find_outliers(df, 'duration_numeric_shows', percenti
 #print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {manual_show_threshold}:\n", updated_show_outliers)
 
 # Gestione dei valori nulli e dei duplicati
-df = eda.manage_null_values(df)
+df = preprocessing.manage_null_values(df)
 df.drop_duplicates(inplace=True)
 
 # Verifica finale dei valori nulli e verifica del dataset per tutte le colonne eccetto quelle escluse
-eda.print_null_values(df, columns_to_exclude)
+preprocessing.print_null_values(df, columns_to_exclude)
 print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(10))
 
+#  Embedding WORD2VEC per la colonna 'listed_in', One-Hot Encoding per la colonna 'type'
+preprocessing.w2v(df)
+df= preprocessing.one_hot_enc(df)
 
-##  WORD2VEC
+# Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'
+columns_to_remove= ["release_year", "country", "date_added", "duration", "listed_in"]
+df = preprocessing.delete_feature(df, columns_to_remove)
 
-# Preprocessing della colonna 'listed_in' per creare una lista di generi
-# Dividi i generi in liste di parole (liste di generi per titolo)
-df['listed_in_clean'] = df['listed_in'].apply(lambda x: x.split(', '))
-
-# Addestramento del modello Word2Vec sulle liste di generi
-model = Word2Vec(sentences=df['listed_in_clean'], vector_size=100, window=5, min_count=1, workers=4, sg=0)
-
-# Ottenere gli embeddings per tutti i generi estraendo l'elenco di generi unici
-genres_vocab = list(model.wv.key_to_index.keys())
-print(f"Generi nel vocabolario del modello Word2Vec: {genres_vocab}")
-
-# Recuperiamo l'embedding per ogni genere nel vocabolario
-genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
-
-# Esempio
-print("\nEmbedding per alcuni generi:")
-for genre in ['International Movies', 'Dramas']: 
-    print(f"{genre}: {genre_embeddings[genre]}\n")
-
-# Creare embedding medio per ogni titolo
-df['genre_embedding'] = df['listed_in_clean'].apply(lambda x: model.wv[x].mean(axis=0))
-
-# Mostrare i primi embedding medi per i titoli
-print("\nEmbedding medio per i primi 5 titoli:")
-print(df[['title', 'genre_embedding']].head())
-
-# One-Hot Encoding della colonna 'type' e aggiornamento del DataFrame df
-df = pd.get_dummies(df, columns=['type'])
-
-# Mostra le prime righe del DataFrame aggiornato con la colonna 'type' one-hot encoded
-print("\nPrime righe del DataFrame con la colonna 'type' one-hot encoded:")
-print(df[['title', 'type_Movie', 'type_TV Show']].head())
-
-# Mostra tutte le colonne ora presenti nel DataFrame
+# Mostra tutte le colonne presenti nel DataFrame dopo l'operazione di preprocessing
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
+
+
+
+
+

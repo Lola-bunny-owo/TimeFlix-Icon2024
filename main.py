@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import eda 
+from gensim.models import Word2Vec
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
@@ -71,3 +72,32 @@ df.drop_duplicates(inplace=True)
 # Verifica finale dei valori nulli e verifica del dataset per tutte le colonne eccetto quelle escluse
 eda.print_null_values(df, columns_to_exclude)
 print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(10))
+
+
+##  WORD2VEC
+
+# Preprocessing della colonna 'listed_in' per creare una lista di generi
+# Dividi i generi in liste di parole (liste di generi per titolo)
+df['listed_in_clean'] = df['listed_in'].apply(lambda x: x.split(', '))
+
+# Addestramento del modello Word2Vec sulle liste di generi
+model = Word2Vec(sentences=df['listed_in_clean'], vector_size=100, window=5, min_count=1, workers=4, sg=0)
+
+# Ottenere gli embeddings per tutti i generi estraendo l'elenco di generi unici
+genres_vocab = list(model.wv.key_to_index.keys())
+print(f"Generi nel vocabolario del modello Word2Vec: {genres_vocab}")
+
+# Recuperiamo l'embedding per ogni genere nel vocabolario
+genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
+
+# Esempio
+print("\nEmbedding per alcuni generi:")
+for genre in ['International Movies', 'Dramas']: 
+    print(f"{genre}: {genre_embeddings[genre]}\n")
+
+# Creare embedding medio per ogni titolo
+df['genre_embedding'] = df['listed_in_clean'].apply(lambda x: model.wv[x].mean(axis=0))
+
+# Mostrare i primi embedding medi per i titoli
+print("\nEmbedding medio per i primi 5 titoli:")
+print(df[['title', 'genre_embedding']].head())

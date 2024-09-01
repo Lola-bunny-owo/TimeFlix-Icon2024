@@ -101,3 +101,13 @@ df['genre_embedding'] = df['listed_in_clean'].apply(lambda x: model.wv[x].mean(a
 # Mostrare i primi embedding medi per i titoli
 print("\nEmbedding medio per i primi 5 titoli:")
 print(df[['title', 'genre_embedding']].head())
+
+# One-Hot Encoding della colonna 'type'
+df_encoded = pd.get_dummies(df, columns=['type'])
+
+# Mostra le prime righe del DataFrame con la colonna 'type' one-hot encoded
+print("\nPrime righe del DataFrame con la colonna 'type' one-hot encoded:")
+print(df_encoded[['title', 'type_Movie', 'type_TV Show']].head())
+
+print("\nColonne presenti nel DataFrame dopo il preprocessing:")
+print(df.columns)

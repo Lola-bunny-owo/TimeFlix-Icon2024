@@ -1,0 +1,249 @@
+Da Chatgpt, info utili sul come procedere:
+
+Raccolta delle Preferenze dell'Utente:
+Prima di applicare il modello di raccomandazione e fare lo splitting dei dati, è necessario raccogliere le preferenze dell'utente e strutturarle all'interno di un DataFrame. Questo processo di raccolta permette di personalizzare le raccomandazioni in modo che rispecchino i gusti e i comportamenti dell'utente. La fase di raccolta e gestione delle preferenze può essere considerata una parte avanzata del sistema, soprattutto perché influenzerà direttamente i modelli di raccomandazione e le tecniche di ingegneria della conoscenza che verranno utilizzate.
+
+Quante Preferenze l'Utente dovrebbe Esprimere?
+Per ottenere un profilo accurato dell'utente, è consigliabile raccogliere una serie di preferenze che coprano diversi aspetti rilevanti per la raccomandazione. Un buon set di preferenze dovrebbe includere almeno:
+
+Preferenze di Genere: I generi preferiti (es. Commedia, Drammatico, Azione).
+Tipo di Contenuto: Preferenza tra serie TV e film.
+Durata Preferita: Tempo massimo o ideale di visione (es. meno di 90 minuti per un film, meno di 30 minuti per una serie).
+Orario di Visione Preferito: Momento della giornata in cui si preferisce guardare contenuti (es. mattina, pomeriggio, sera).
+Giorno della Settimana: Giorni preferiti per la visione (es. weekend, giorni feriali).
+Rating Minimo Accettabile: Punteggio minimo dei contenuti (es. evitare contenuti con un rating inferiore a 3 stelle).
+Esempio di DataFrame delle Preferenze dell'Utente:
+Una volta raccolte, queste preferenze possono essere strutturate in un DataFrame come segue:
+
+import pandas as pd
+
+# Esempio di preferenze utente raccolte
+preferences = {
+    'genre': ['Comedy', 'Action', 'Sci-Fi'],   # Generi preferiti
+    'type': ['Movie', 'TV Show'],              # Tipo di contenuto preferito
+    'preferred_duration': [90],                # Durata massima in minuti
+    'preferred_time_of_day': ['Evening'],      # Orario preferito per la visione
+    'preferred_day_of_week': ['Weekend'],      # Giorni preferiti
+    'rating': ['TV-MA', 'TV-16', ...]          # Punteggio minimo accettabile
+}
+
+# Creazione del DataFrame delle preferenze
+user_preferences_df = pd.DataFrame([preferences])
+
+# Visualizzazione del DataFrame delle preferenze
+print(user_preferences_df)
+
+
+Applicazione delle Tecniche di Ingegneria della Conoscenza:
+Questa fase di raccolta delle preferenze, sebbene sembri preliminare, si collega profondamente con tecniche avanzate come:
+
+Constraint Satisfaction Problems (CSP): Definire regole e vincoli basati sulle preferenze dell'utente (es. non raccomandare contenuti oltre una certa durata).
+Apprendimento Supervisionato: Utilizzare le preferenze passate e feedback espliciti per allenare modelli che predicono i contenuti preferiti.
+Apprendimento Non Supervisionato: Identificare pattern nascosti nelle preferenze dell'utente per scoprire raccomandazioni non ovvie, come raggruppare utenti con gusti simili.
+Tecniche di Embedding: Utilizzare Word2Vec o altri metodi di embedding per rappresentare le preferenze in uno spazio numerico, facilitando l'uso di modelli di Machine Learning.
+
+Perché Questa Fase è Avanzata:
+La fase di gestione delle preferenze dell'utente e la loro trasformazione in input per il sistema non sono banali e sono strettamente legate all'infrastruttura del sistema di raccomandazione. Le preferenze influenzano direttamente i modelli che verranno utilizzati, rendendo questa parte fondamentale per l’accuratezza e la personalizzazione delle raccomandazioni. Gestire correttamente queste informazioni significa migliorare la capacità del sistema di rispondere in modo efficace alle esigenze dell'utente.
+
+In sintesi, questa raccolta e gestione delle preferenze si posiziona tra la raccolta dei dati e l'applicazione delle tecniche avanzate di machine learning, fungendo da ponte critico per costruire un sistema di raccomandazione solido e user-centric.
+
+
+---------------------------------------------------
+Passi Successivi dopo il Preprocessing:
+Dato che il preprocessing è completo e hai identificato le feature chiave nel tuo dataset, il prossimo passo è integrare e strutturare le preferenze degli utenti e applicare le tecniche di ragionamento e apprendimento previste nel progetto. La sequenza e il modo in cui implementerai queste tecniche influenzeranno direttamente la qualità delle raccomandazioni generate dal sistema. Ecco una guida dettagliata sui passi successivi, con una spiegazione su come integrarli al meglio:
+1. Raccolta e Gestione delle Preferenze degli Utenti:
+La raccolta delle preferenze degli utenti è un passaggio cruciale perché fornirà i parametri base per il sistema di raccomandazione. È importante raccogliere le preferenze per i seguenti aspetti:
+Genere (listed_in_clean): Usa embedding come Word2Vec per rappresentare le preferenze sui generi.
+Tipo di contenuto (type_Movie, type_TV Show): Preferenza tra film e serie TV.
+Durata (duration_numeric_film, duration_numeric_shows): Preferenza sulla durata dei contenuti.
+Orario e Giorno della Settimana: Dati esterni che possono essere aggiunti come feature se si desidera considerare i momenti di visione preferiti.
+Esempio di Codice per Gestire le Preferenze dell'Utente:
+# Creazione di un DataFrame delle preferenze utente
+user_preferences = {
+    'preferred_genres': ['Comedy', 'Action'],    # Generi preferiti
+    'preferred_type': ['Movie'],                # Preferenza per i film
+    'max_duration': 120,                        # Durata massima in minuti
+    'preferred_time': ['Evening'],              # Orario preferito per la visione
+    'preferred_days': ['Weekend'],              # Giorni preferiti
+}
+
+# Creazione del DataFrame delle preferenze
+user_preferences_df = pd.DataFrame([user_preferences])
+
+# Integrazione delle preferenze con il dataset principale
+# Potrebbe essere utile avere un sistema di mappatura delle preferenze dell'utente con il contenuto
+print(user_preferences_df)
+
+2. Aggiunta di Feature Potenzialmente Mancanti:
+Per integrare al meglio le tecniche di apprendimento e ragionamento, potrebbe essere necessario aggiungere nuove colonne o trasformare esistenti:
+Orario e Giorno della Settimana: Se non sono inclusi nel dataset, potresti generare dummy variables per l'orario e il giorno della settimana per simulare le preferenze temporali degli utenti.
+Feedback dell'Utente: Raccogli i dati di feedback per apprendimento supervisionato; per esempio, valutazioni che l'utente ha dato a film o serie TV precedentemente guardati.
+Flag o Contatori: Per aggiungere feature come il numero di visualizzazioni per genere o tipo di contenuto che può essere usato per il clustering o CSP.
+3. Applicazione delle Tecniche di Apprendimento e Ragionamento:
+Una volta raccolte le preferenze degli utenti, è possibile integrare le tecniche di ragionamento e apprendimento nel seguente ordine:
+a) Ragionamento con Vincoli (CSP):
+Obiettivo: Implementare regole e vincoli per filtrare i contenuti che non soddisfano le preferenze dell'utente.
+Esempio: Escludere contenuti con durata maggiore di quella specificata o che non rispettano il tipo di contenuto richiesto.
+
+# Filtrare contenuti basati sulle preferenze utilizzando vincoli
+filtered_content = df[(df['duration_numeric'] <= user_preferences['max_duration']) & 
+                      (df['listed_in_clean'].apply(lambda x: any(genre in x for genre in user_preferences['preferred_genres'])))]
+
+b) Ragionamento Proposizionale:
+Obiettivo: Creare regole logiche basate sulle preferenze per raccomandare contenuti.
+Esempio: Utilizzare regole logiche che, se una serie TV è preferita e ha un rating superiore a un certo valore, venga suggerita prioritariamente.
+c) Apprendimento Non Supervisionato (Clustering):
+Obiettivo: Identificare pattern nascosti nel comportamento degli utenti, come cluster di utenti con gusti simili.
+Esempio: K-means clustering per raggruppare utenti o contenuti simili.
+from sklearn.cluster import KMeans
+
+# Esempio di clustering sui dati delle preferenze utente
+features_for_clustering = df[['genre_embedding', 'duration_numeric_film', 'duration_numeric_shows']].values
+kmeans = KMeans(n_clusters=3).fit(features_for_clustering)
+
+# Assegna cluster ai contenuti
+df['cluster'] = kmeans.labels_
+
+d) Apprendimento Supervisionato:
+Obiettivo: Utilizzare dati di feedback per predire quali contenuti piaceranno all'utente.
+Esempio: Addestrare un modello di classificazione con feedback dell'utente come target.
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# Dividi il dataset in training e test
+X = df[['genre_embedding', 'duration_numeric_film', 'type_Movie', 'type_TV Show']]  # Feature selezionate
+y = df['user_feedback']  # Supponiamo di avere un feedback raccolto
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Addestramento modello di classificazione
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# Predizione su dati di test
+predictions = model.predict(X_test)
+4. Iterazione e Feedback dell'Utente:
+Dopo aver implementato le tecniche, è essenziale raccogliere e analizzare i feedback degli utenti per migliorare il sistema:
+Raccogli i rating e commenti per aggiornare modelli e vincoli.
+Implementa un ciclo di miglioramento continuo basato sul feedback degli utenti.
+Conclusione:
+La chiave è integrare le preferenze utente, filtrare e trasformare i dati usando ragionamento e apprendimento automatico. Aggiungere colonne come orario, giorno, e raccolta feedback è essenziale per arricchire il dataset e migliorare l’accuratezza delle raccomandazioni. Prosegui in modo iterativo, raffinando il sistema con i dati e i feedback ottenuti.
+
+----------------------------------------------
+Se vogliamo fare il renaming delle colonne:
+new_column_names = {
+    'show_id': 'ID',
+    'type': 'Category',
+    'title': 'Title',
+    'director': 'Director',
+    'cast': 'Cast',
+    'date_added': 'Date_Added',
+    'release_year': 'Year',
+    'rating': 'Rating',
+    'duration': 'Duration (min)',
+    'listed_in': 'Genre',
+    'description': 'Description'
+}
+
+movie_df.rename(columns=new_column_names, inplace = True)
+-------------------------------------------------
+Se vogliamo mappare diverse categorie e non avere la dicitura degli stati uniti:
+
+# Get all ratings in the dataset
+all_ratings = df['rating'].value_counts().index.to_list()
+
+print(sorted(all_ratings))
+['A', 'G', 'NC-17', 'NR', 'PG', 'PG-13', 'R', 'TV-14', 'TV-G', 'TV-MA', 'TV-PG', 'TV-Y', 'TV-Y7', 'TV-Y7-FV', 'UR']
+def get_category(rating):
+    """
+    Map a rating to its corresponding category.
+
+    This function takes a movie or TV show rating and returns the category 
+    to which the rating belongs. The categories are defined in a dictionary 
+    where each category maps to a list of ratings. The categories are:
+    'kids', 'all', 'adults', and 'teens'.
+
+    Args:
+        rating (str): The rating to be categorized. Expected values are:
+            - 'G', 'TV-G', 'TV-Y', 'TV-Y7', 'TV-Y7-FV' for 'Kids'
+            - 'PG', 'TV-PG' for 'All'
+            - 'R', 'NC-17', 'TV-MA', 'UR', 'NR' for 'Adults'
+            - 'PG-13', 'TV-14' for 'Teens'
+
+    Returns:
+        str: The category name with the first letter capitalized if the rating 
+        is found in the dictionary. Returns None if the rating is not found 
+        in any category.
+
+    Example:
+        >>> get_category('G')
+        'Kids'
+        >>> get_category('PG-13')
+        'Teens'
+        >>> get_category('XYZ')
+        None
+    """
+    # Dictionary with categories
+    categories = {
+        'kids': ['G', 'TV-G', 'TV-Y', 'TV-Y7', 'TV-Y7-FV'],
+        'all': ['PG', 'TV-PG'],
+        'adults': ['R', 'NC-17', 'TV-MA', 'UR', 'NR'],
+        'teens': ['PG-13', 'TV-14']
+    }
+    for category, ratings in categories.items():
+        if rating in ratings:
+            return category.capitalize()  # Capitalize the category name
+    return None
+    
+---------------------------------------------------------
+1. Approccio Tramite Input da Console:
+Puoi utilizzare input() in Python per richiedere informazioni all'utente direttamente dalla console. Questo metodo è semplice e ti permette di testare il funzionamento base senza implementare un'interfaccia complessa.
+
+Esempio di Codice:
+
+def collect_user_preferences():
+    """
+    Funzione per raccogliere le preferenze dell'utente a runtime tramite input da console.
+    """
+    # Richiedi all'utente il genere preferito
+    genres = input("Inserisci i generi preferiti separati da una virgola (es. Action, Comedy, Drama): ").split(',')
+
+    # Richiedi all'utente il tipo di contenuto preferito
+    content_type = input("Preferisci Film o Serie TV? (scrivi 'Movie' o 'TV Show'): ").strip()
+
+    # Richiedi la durata massima preferita
+    max_duration = int(input("Inserisci la durata massima preferita in minuti (es. 120): "))
+
+    # Richiedi l'orario preferito di visione
+    preferred_time = input("Qual è l'orario preferito per guardare contenuti? (es. Morning, Afternoon, Evening): ").strip()
+
+    # Richiedi i giorni della settimana preferiti per guardare contenuti
+    preferred_days = input("Quali giorni della settimana preferisci guardare contenuti? (es. Weekend, Weekdays): ").strip()
+
+    # Creazione del dizionario con le preferenze raccolte
+    preferences = {
+        'preferred_genres': [genre.strip() for genre in genres],  # Pulizia degli input inseriti
+        'preferred_type': content_type,
+        'max_duration': max_duration,
+        'preferred_time': preferred_time,
+        'preferred_days': preferred_days
+    }
+    
+    return preferences
+
+# Chiamata della funzione per raccogliere le preferenze
+user_preferences = collect_user_preferences()
+print("Preferenze raccolte:", user_preferences)
+
+# Integrazione con il sistema di raccomandazione (esempio di filtro)
+
+# Filtrare il dataset in base alle preferenze raccolte
+filtered_df = df[(df['duration_numeric'] <= user_preferences['max_duration']) & 
+                 (df['listed_in_clean'].apply(lambda x: any(genre in x for genre in user_preferences['preferred_genres']))) &
+                 (df['type_Movie'] if user_preferences['preferred_type'] == 'Movie' else df['type_TV Show'])]
+
+print("Contenuti suggeriti in base alle preferenze:")
+print(filtered_df[['title', 'duration_numeric', 'listed_in_clean']])
+
+

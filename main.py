@@ -76,13 +76,16 @@ print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= [
 preprocessing.w2v(df)
 df= preprocessing.one_hot_enc(df)
 
-# Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'
+# Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'. Renaming delle colonne
 columns_to_remove= ["release_year", "country", "date_added", "duration", "listed_in"]
 df = preprocessing.delete_feature(df, columns_to_remove)
+df = preprocessing.rename_feature(df)
 
 # Mostra tutte le colonne presenti nel DataFrame dopo l'operazione di preprocessing
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
+
+
 
 
 

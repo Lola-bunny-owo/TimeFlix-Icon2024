@@ -85,3 +85,30 @@ def delete_feature(df, columns):
     df.drop(columns, axis=1, inplace=True)
     print(f"\nColonne rimosse: {columns}")
     return df
+
+# Funzione per il renaming delle colonne
+def rename_feature(df):
+    new_features_names = {
+        'show_id': 'ID',
+        'type': 'Type',
+        'title': 'Title',
+        'director': 'Director',
+        'description': 'Description',
+        'cast': 'Cast',
+        'rating': 'Classification',
+        'listed_in_clean': 'Genre',
+        'duration_numeric_film': 'Films_Duration',
+        'duration_numeric_shows': 'Shows_Duration',
+        'genre_embedding': 'Genre_Embedding',
+        'type_Movie': 'Is_Movie',
+        'type_TV Show': 'Is_TVShow',
+        'duration_numeric': 'Duration_numeric',
+    }
+    
+    print("\nRenaming delle colonne..")
+    df.rename(columns= new_features_names, inplace= True)
+    return df
+
+
+# Funzione per il mapping dei ratings
+

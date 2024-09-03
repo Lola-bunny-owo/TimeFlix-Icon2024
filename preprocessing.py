@@ -85,3 +85,50 @@ def delete_feature(df, columns):
     df.drop(columns, axis=1, inplace=True)
     print(f"\nColonne rimosse: {columns}")
     return df
+
+# Funzione per il renaming delle colonne
+def rename_feature(df):
+    new_features_names = {
+        'show_id': 'ID',
+        'type': 'Type',
+        'title': 'Title',
+        'director': 'Director',
+        'description': 'Description',
+        'cast': 'Cast',
+        'rating': 'Classification',
+        'listed_in_clean': 'Genre',
+        'duration_numeric_film': 'Films_Duration',
+        'duration_numeric_shows': 'Shows_Duration',
+        'genre_embedding': 'Genre_Embedding',
+        'type_Movie': 'Is_Movie',
+        'type_TV Show': 'Is_TVShow',
+        'duration_numeric': 'Duration_numeric',
+    }
+    
+    print("\nRenaming delle colonne..")
+    df.rename(columns= new_features_names, inplace= True)
+    return df
+
+
+# Funzione per il mapping dei ratings in una categoria corrispondente. 
+# Considerate 7 categorie differenti: Kids, Children, Family, Teens, Mature Teens, Adults, Unrated
+def get_rating(rating):
+    
+    # Dizionario che mappa i ratings alle categorie
+    categories = {
+        'kids': ['G', 'TV-G', 'TV-Y'],  # Bambini piccoli
+        'children': ['TV-Y7', 'TV-Y7-FV'],  # Bambini sopra i 7 anni
+        'family': ['PG', 'TV-PG'],  # Contenuti adatti a tutta la famiglia
+        'teens': ['PG-13', 'TV-14'],  # Adolescenti
+        'mature teens': ['R'],  # Adolescenti Maggiorenni
+        'adults': ['NC-17', 'TV-MA'],  # Contenuti per adulti
+        'unrated': ['NR', 'Not Rated', 'UR']  # Non classificati
+    }
+    
+    # Ricerca del rating nella categoria
+    for category, ratings in categories.items():
+        if rating in ratings:
+            return category.capitalize()
+
+    
+    

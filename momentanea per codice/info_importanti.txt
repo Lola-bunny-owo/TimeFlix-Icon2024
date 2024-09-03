@@ -246,4 +246,126 @@ filtered_df = df[(df['duration_numeric'] <= user_preferences['max_duration']) &
 print("Contenuti suggeriti in base alle preferenze:")
 print(filtered_df[['title', 'duration_numeric', 'listed_in_clean']])
 
+---------------------------------------------
+Ho chiesto più info, dato che stiamo lavorando con le preferenze in input di un solo utente:
 
+Cosa fare se hai solo le preferenze di un utente?
+Se hai a disposizione solo le preferenze di un utente (ad esempio, generi preferiti, durata ideale, tipo di contenuto come film o serie TV), puoi comunque costruire un sistema efficace utilizzando i seguenti approcci:
+
+Filtraggio Basato su Regole (Rule-Based Filtering)
+
+Definisci delle regole semplici che filtrano i film o le serie in base ai parametri specifici indicati dall’utente.
+Esempio: se l’utente preferisce commedie e ha 90 minuti liberi, mostra contenuti di genere "Comedy" con durata minore o uguale a 90 minuti.
+
+Ragionamento con Vincoli (CSP)
+
+Usa le preferenze dell’utente come vincoli da soddisfare per generare raccomandazioni.
+Esempio: se l’utente vuole guardare film lunghi nel weekend, imposta dei vincoli per selezionare film con una durata adeguata e che corrispondano a un orario disponibile.
+
+Apprendimento Supervisionato
+
+Addestra un modello supervisionato sui dati storici di preferenze e interazioni passate, se disponibili, anche solo per un singolo utente.
+Utilizza classificatori o regressori per prevedere il grado di gradimento di un contenuto in base alle preferenze espresse.
+
+Apprendimento Non Supervisionato (Clustering)
+
+Raggruppa i film o le serie TV in base alle caratteristiche condivise e suggerisci cluster che potrebbero essere di interesse per l’utente.
+Esempio: usando K-means, raggruppa contenuti in cluster come "azione breve", "romantico lungo", ecc., e suggerisci il cluster più adatto.
+
+Implementazione Basata su Preferenze Utente
+Per implementare questo approccio, segui questi passi:
+
+Acquisizione Input dell'Utente:
+
+Usa input diretti nel codice per raccogliere preferenze specifiche (es. genere, durata).
+
+python
+
+genere_preferito = input("Inserisci il tuo genere preferito (es. Action, Comedy): ")
+durata_massima = int(input("Inserisci la durata massima preferita in minuti: "))
+tipo_contenuto = input("Preferisci Film o Serie TV? ")
+Filtraggio Basato su Preferenze:
+
+Filtra il dataset in base ai criteri dell’utente:
+
+python
+
+suggerimenti = df[
+    (df['listed_in_clean'].str.contains(genere_preferito)) &
+    (df['duration_numeric'] <= durata_massima) &
+    ((tipo_contenuto == "Film" & df['type_Movie'] == 1) | (tipo_contenuto == "Serie TV" & df['type_TV Show'] == 1))
+]
+
+Applicazione di Vincoli (CSP):
+
+Integra le preferenze come vincoli per suggerire contenuti che rispettano i criteri dell’utente.
+Output del Sistema:
+
+Restituisci la lista di contenuti filtrati che corrispondono alle preferenze indicate.
+
+python
+
+if suggerimenti.empty:
+    print("Non ci sono contenuti che corrispondono esattamente alle tue preferenze.")
+else:
+    print("Ecco i contenuti suggeriti per te:")
+    print(suggerimenti[['title', 'duration_numeric', 'listed_in_clean']])
+    
+Conclusione
+In questo approccio, puoi utilizzare le preferenze dell'utente per fornire raccomandazioni personalizzate anche se non hai un modello content-based complesso. Integrare queste tecniche ti permette di rendere il sistema dinamico, adattivo, e più sofisticato rispetto ai modelli semplici.
+
+------------------------------
+Dato che facendo così il sistema genererebbe sempre TUTTI i possibili suggerimenti in base alla sua profilazione, ho pensato di chiedere a ChatGPT come implementare un sistema che chieda anche in input il numero di suggerimenti richiesti e come rendere le cose un po' più dinamiche.
+
+Se vuoi che il sistema generi un numero specifico di suggerimenti in base alla quantità scelta dall'utente (ad esempio, 3, 5 o 20 suggerimenti), devi fare una piccola modifica al codice nella fase di output. Invece di mostrare tutti i risultati filtrati, devi selezionare un sottoinsieme del DataFrame in base alla quantità specificata dall'utente.
+
+Modifica da Applicare
+Aggiungi l'input per il numero di suggerimenti desiderati dall'utente:
+
+Inserisci un input per chiedere all’utente quanti suggerimenti vuole ricevere.
+Seleziona casualmente o prendendo i primi N risultati:
+
+Se il numero di suggerimenti disponibili è maggiore di quello richiesto, prendi solo il numero richiesto.
+Puoi selezionare i suggerimenti casualmente per variare l'output o selezionare semplicemente i primi N.
+
+Esempio Modificato del Codice
+Ecco come puoi adattare l'esempio:
+
+python
+
+# Acquisizione delle preferenze dell'utente
+genere_preferito = input("Inserisci il tuo genere preferito (es. Action, Comedy): ")
+durata_massima = int(input("Inserisci la durata massima preferita in minuti: "))
+tipo_contenuto = input("Preferisci Film o Serie TV? ")
+numero_suggerimenti = int(input("Quanti suggerimenti desideri? "))
+
+# Filtraggio basato sulle preferenze dell'utente
+suggerimenti = df[
+    (df['listed_in_clean'].str.contains(genere_preferito, case=False, na=False)) &
+    (df['duration_numeric'] <= durata_massima) &
+    ((tipo_contenuto == "Film" & df['type_Movie'] == 1) | (tipo_contenuto == "Serie TV" & df['type_TV Show'] == 1))
+]
+
+# Controllo se ci sono abbastanza suggerimenti
+if suggerimenti.empty:
+    print("Non ci sono contenuti che corrispondono esattamente alle tue preferenze.")
+else:
+    # Seleziona casualmente il numero di suggerimenti richiesti dall'utente, o i primi N se < richiesto
+    suggerimenti_da_mostrare = suggerimenti.sample(n=min(numero_suggerimenti, len(suggerimenti)), random_state=1)
+    print("Ecco i contenuti suggeriti per te:")
+    print(suggerimenti_da_mostrare[['title', 'duration_numeric', 'listed_in_clean']])
+    
+Spiegazione delle Modifiche
+Input per il numero di suggerimenti:
+
+numero_suggerimenti = int(input("Quanti suggerimenti desideri? ")) aggiunge la richiesta all’utente di inserire quanti suggerimenti desidera.
+Controllo della quantità disponibile:
+
+min(numero_suggerimenti, len(suggerimenti)) assicura che se l'utente chiede più suggerimenti di quanti siano disponibili, il sistema restituisce solo quelli disponibili, evitando errori.
+Selezione casuale:
+
+suggerimenti.sample(n=min(numero_suggerimenti, len(suggerimenti)), random_state=1) seleziona casualmente il numero di suggerimenti richiesti. random_state può essere modificato o rimosso per risultati più casuali.
+Output Finale
+Se l'utente chiede 5 suggerimenti e ne sono disponibili solo 3, il sistema mostrerà i 3 disponibili.
+Se ne sono disponibili 10 e l'utente chiede 5, allora ne verranno mostrati 5 casualmente.
+Questa modifica ti permette di rendere il sistema più interattivo e personalizzabile secondo le preferenze specifiche dell'utente, migliorando la sua esperienza con suggerimenti mirati.

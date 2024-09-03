@@ -79,6 +79,15 @@ df= preprocessing.one_hot_enc(df)
 # Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'. Renaming delle colonne
 columns_to_remove= ["release_year", "country", "date_added", "duration", "listed_in"]
 df = preprocessing.delete_feature(df, columns_to_remove)
+
+# Mapping dei ratings
+all_ratings = df['rating'].value_counts().index.to_list()       
+print("\nRatings presenti nel dataset:", sorted(all_ratings))    # Innanzitutto stampa a schermo i ratings presenti nel dataset
+df['rating'] = df['rating'].apply(preprocessing.get_rating) 
+print("\nPrime 10 righe del dataset con i ratings mappati:")
+print(df[['show_id','title', 'description', 'rating' ]].head(10))
+
+# Renaming delle feature
 df = preprocessing.rename_feature(df)
 
 # Mostra tutte le colonne presenti nel DataFrame dopo l'operazione di preprocessing

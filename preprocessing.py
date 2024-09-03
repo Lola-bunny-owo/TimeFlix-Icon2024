@@ -110,5 +110,25 @@ def rename_feature(df):
     return df
 
 
-# Funzione per il mapping dei ratings
+# Funzione per il mapping dei ratings in una categoria corrispondente. 
+# Considerate 7 categorie differenti: Kids, Children, Family, Teens, Mature Teens, Adults, Unrated
+def get_rating(rating):
+    
+    # Dizionario che mappa i ratings alle categorie
+    categories = {
+        'kids': ['G', 'TV-G', 'TV-Y'],  # Bambini piccoli
+        'children': ['TV-Y7', 'TV-Y7-FV'],  # Bambini sopra i 7 anni
+        'family': ['PG', 'TV-PG'],  # Contenuti adatti a tutta la famiglia
+        'teens': ['PG-13', 'TV-14'],  # Adolescenti
+        'mature teens': ['R'],  # Adolescenti Maggiorenni
+        'adults': ['NC-17', 'TV-MA'],  # Contenuti per adulti
+        'unrated': ['NR', 'Not Rated', 'UR']  # Non classificati
+    }
+    
+    # Ricerca del rating nella categoria
+    for category, ratings in categories.items():
+        if rating in ratings:
+            return category.capitalize()
 
+    
+    

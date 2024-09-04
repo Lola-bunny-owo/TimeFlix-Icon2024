@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import eda 
 import preprocessing
 from gensim.models import Word2Vec
+import interface 
+
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
@@ -94,9 +96,5 @@ df = preprocessing.rename_feature(df)
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
 
-
-
-
-
-
-
+# Inizializzazione dell'interfaccia grafica
+interface.create_interface()

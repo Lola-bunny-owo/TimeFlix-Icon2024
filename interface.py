@@ -108,7 +108,7 @@ def create_interface():
     genre_frame = tk.LabelFrame(root, text="Genres")
     genre_frame.pack(fill="x", padx=5, pady=5)
 
-    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]
+    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"] # dovrebbe prendere i generi che abbiamo già definito
     genre_var = tk.Listbox(genre_frame, selectmode="multiple", height=6)
     for genre in genres_list:
         genre_var.insert(tk.END, genre)

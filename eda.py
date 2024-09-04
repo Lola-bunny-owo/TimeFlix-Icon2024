@@ -47,7 +47,7 @@ def bar_plot(df, type_value):
     df_selection= df[df['type'] == type_value]
     
     # Crea il bar plot
-    plt.figure(figsize=(12,10))
+    plt.figure(figsize=(8,6))
     ax = sns.countplot(x="rating", data=df_selection, palette="Set2", order=df_selection['rating'].value_counts().index[0:12])
     ax.set_title(f"{type_value} Rating")
     ax.set_ylabel(f"Number of {type_value}s")
@@ -77,7 +77,7 @@ def plot_combined_genres_by_type(df):
     combined_genres = combined_genres.reset_index().melt(id_vars='index', var_name='Genre Type', value_name='Count')
 
     # Plot dei generi combinati
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(8, 6))
     sns.barplot(x='Count', y='index', hue='Genre Type', data=combined_genres, palette='viridis')
     plt.title('Film and TV Series Genres Differences')
     plt.xlabel('Count')

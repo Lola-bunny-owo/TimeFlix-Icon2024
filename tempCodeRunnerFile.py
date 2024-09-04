@@ -1,0 +1,1 @@
+  cal_label = tk.Label(top, text=cal_str, font=("Courier", 10))

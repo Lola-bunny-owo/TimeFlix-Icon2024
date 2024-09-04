@@ -26,6 +26,7 @@ def generate_calendar(results, root):
     result_label = tk.Label(top, text="\n".join(results), justify='left')
     result_label.pack(pady=10)
 
+# Funzione per generare un pdf con i suggerimenti e la pianificazione.
 def generate_pdf(results):
     pdf = FPDF()
     pdf.add_page()
@@ -40,6 +41,26 @@ def generate_pdf(results):
     
     pdf.output("Netflix_Recommendations.pdf")
     messagebox.showinfo("PDF Generated", "The PDF has been successfully generated")
+
+# Funzione per aggiornare il frame della durata in base al tipo di contenuto selezionato
+def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var, min_seasons_var, max_seasons_var):
+    # Rimuove tutti i widget esistenti nel frame della durata
+    for widget in duration_frame.winfo_children():
+        widget.destroy()
+
+    # Aggiunge i widget in base al tipo di contenuto selezionato
+    if content_type.get() == "Movie":
+        duration_frame.config(text="Duration (Minutes)")
+        tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
+        tk.Label(duration_frame, text="Max Duration").pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=max_duration_var, width=5).pack(side="left", padx=5)
+    else:  # TV Show
+        duration_frame.config(text="Duration (Seasons)")
+        tk.Label(duration_frame, text="Min Seasons").pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=min_seasons_var, width=5).pack(side="left", padx=5)
+        tk.Label(duration_frame, text="Max Seasons").pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=max_seasons_var, width=5).pack(side="left", padx=5)
 
 # Funzione per raccogliere le preferenze dell'utente
 def submit_preferences(content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root):
@@ -96,19 +117,24 @@ def create_interface():
     # Frame per la durata
     duration_frame = tk.LabelFrame(root, text="Duration (Minutes)")
     duration_frame.pack(fill="x", padx=5, pady=5)
-
+    
+    # Variabili per la durata
     min_duration_var = tk.IntVar(value=0)
     max_duration_var = tk.IntVar(value=200)
-    tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
-    tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
-    tk.Label(duration_frame, text="Max Duration").pack(side="left", padx=5)
-    tk.Entry(duration_frame, textvariable=max_duration_var, width=5).pack(side="left", padx=5)
+    min_seasons_var = tk.IntVar(value=1)
+    max_seasons_var = tk.IntVar(value=10)
+
+    # Aggiorna il frame della durata quando cambia il tipo di contenuto
+    content_type_var.trace_add('write', lambda *args: update_duration_frame(
+        content_type_var, duration_frame, min_duration_var, max_duration_var, min_seasons_var, max_seasons_var))
 
     # Frame per i generi
     genre_frame = tk.LabelFrame(root, text="Genres")
     genre_frame.pack(fill="x", padx=5, pady=5)
 
-    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"] # dovrebbe prendere i generi che abbiamo già definito
+    # Nota bene: dovremmo avere come lista dei generi una lista esaustiva che raggruppi i generi per film e generi per serie tv.
+    # non va bene avere l'elenco scritto da noi -> c'è bisogno di un modo per mappare la scelta all'operazione che avviene nel dataset (filtraggio secondo le preferenze)
+    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]
     genre_var = tk.Listbox(genre_frame, selectmode="multiple", height=6)
     for genre in genres_list:
         genre_var.insert(tk.END, genre)
@@ -126,9 +152,9 @@ def create_interface():
     button_frame.pack(fill="x", padx=5, pady=5)
 
     ttk.Button(button_frame, text="Submit", command=lambda: submit_preferences(
-        content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root)).pack(side="left", padx=5)
+        content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root)).pack(side="right", padx=5)
     ttk.Button(button_frame, text="Reset", command=lambda: reset_fields(
-        content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry)).pack(side="right", padx=5)
+        content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry)).pack(side="left", padx=5)
 
     # Avvio dell'interfaccia grafica
     root.mainloop()

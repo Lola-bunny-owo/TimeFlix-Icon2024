@@ -95,3 +95,55 @@ def null_unique_values(df, columns):
 
     return results
 
+----------------
+'''
+# Creazione dell'interfaccia grafica
+root = tk.Tk()
+root.title("Netflix Recommendation System")
+
+# Frame per il tipo di contenuto
+type_frame = tk.LabelFrame(root, text="Content Type")
+type_frame.pack(fill="x", padx=5, pady=5)
+
+content_type_var = tk.StringVar(value="Movie")
+ttk.Radiobutton(type_frame, text="Movie", variable=content_type_var, value="Movie").pack(side="left", padx=5)
+ttk.Radiobutton(type_frame, text="TV Show", variable=content_type_var, value="TV Show").pack(side="left", padx=5)
+
+# Frame per la durata
+duration_frame = tk.LabelFrame(root, text="Duration (Minutes)")
+duration_frame.pack(fill="x", padx=5, pady=5)
+
+min_duration_var = tk.IntVar(value=0)
+max_duration_var = tk.IntVar(value=200)
+tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
+tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
+tk.Label(duration_frame, text="Max Duration").pack(side="left", padx=5)
+tk.Entry(duration_frame, textvariable=max_duration_var, width=5).pack(side="left", padx=5)
+
+# Frame per i generi
+genre_frame = tk.LabelFrame(root, text="Genres")
+genre_frame.pack(fill="x", padx=5, pady=5)
+
+genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]
+genre_var = tk.Listbox(genre_frame, selectmode="multiple", height=6)
+for genre in genres_list:
+    genre_var.insert(tk.END, genre)
+genre_var.pack(fill="x", padx=5, pady=5)
+
+# Frame per il cast
+cast_frame = tk.LabelFrame(root, text="Cast (Optional)")
+cast_frame.pack(fill="x", padx=5, pady=5)
+
+cast_entry = tk.Entry(cast_frame)
+cast_entry.pack(fill="x", padx=5, pady=5)
+
+# Frame per i pulsanti
+button_frame = tk.Frame(root)
+button_frame.pack(fill="x", padx=5, pady=5)
+
+ttk.Button(button_frame, text="Submit", command=submit_preferences).pack(side="left", padx=5)
+ttk.Button(button_frame, text="Reset", command=reset_fields).pack(side="right", padx=5)
+
+# Avvio dell'interfaccia grafica
+root.mainloop()
+'''

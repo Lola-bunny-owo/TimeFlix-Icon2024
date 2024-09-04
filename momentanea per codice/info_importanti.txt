@@ -369,3 +369,184 @@ Output Finale
 Se l'utente chiede 5 suggerimenti e ne sono disponibili solo 3, il sistema mostrerà i 3 disponibili.
 Se ne sono disponibili 10 e l'utente chiede 5, allora ne verranno mostrati 5 casualmente.
 Questa modifica ti permette di rendere il sistema più interattivo e personalizzabile secondo le preferenze specifiche dell'utente, migliorando la sua esperienza con suggerimenti mirati.
+
+---------------------------
+Per implementare la funzionalità che evidenzia il giorno pianificato sul calendario in base alle preferenze dell'utente, dobbiamo apportare alcune modifiche al codice:
+
+Aggiungere l'input del giorno della settimana: Estenderemo l'interfaccia per includere una selezione del giorno della settimana in cui l'utente preferisce vedere il film o la serie TV.
+
+Calcolare la data esatta del prossimo giorno della settimana selezionato: Dopo aver acquisito il giorno scelto dall'utente, determineremo la prossima occorrenza di quel giorno nel mese corrente.
+
+Evidenziare il giorno sul calendario: Nella finestra del calendario, il giorno pianificato verrà evidenziato per renderlo visibile all'utente.
+
+Modifiche al Codice
+Ecco il codice aggiornato che include questi cambiamenti:
+
+python
+Copia codice
+import tkinter as tk
+from tkinter import ttk, messagebox
+import calendar
+from datetime import datetime, timedelta
+from fpdf import FPDF
+import json  # Importa il modulo JSON per salvare le preferenze
+
+# Funzione per salvare le preferenze in un file JSON
+def save_preferences(preferences):
+    with open("user_preferences.json", "w") as file:
+        json.dump(preferences, file)
+    messagebox.showinfo("Preferences Saved", "Your preferences have been saved successfully")
+
+# Funzione per calcolare la prossima data del giorno selezionato
+def get_next_day_date(day_name):
+    today = datetime.now()
+    days_ahead = list(calendar.day_name).index(day_name) - today.weekday()
+    if days_ahead <= 0:  # Se il giorno è oggi o già passato questa settimana, va alla prossima settimana
+        days_ahead += 7
+    return today + timedelta(days=days_ahead)
+
+# Funzione per visualizzare i risultati su un calendario
+def generate_calendar(results, planned_day):
+    planned_date = get_next_day_date(planned_day)
+    planned_day_num = planned_date.day
+    now = datetime.now()
+    cal = calendar.TextCalendar(calendar.SUNDAY)
+    cal_str = cal.formatmonth(now.year, now.month)
+
+    # Creazione della finestra del calendario
+    top = tk.Toplevel(root)
+    top.title("Calendar")
+    
+    # Highlighting del giorno pianificato
+    cal_label = tk.Label(top, text=cal_str, font=("Courier", 10), justify="left")
+    cal_label.pack(pady=10)
+
+    # Evidenziamento del giorno pianificato
+    calendar_text = cal_str.replace(f"{planned_day_num}", f"[{planned_day_num}]")  # Usa le parentesi per evidenziare il giorno
+    cal_highlighted = tk.Label(top, text=calendar_text, font=("Courier", 10), fg="blue")
+    cal_highlighted.pack(pady=10)
+
+    result_label = tk.Label(top, text="\n".join(results), justify='left')
+    result_label.pack(pady=10)
+
+def generate_pdf(results):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.cell(200, 10, txt="Netflix Recommendations", ln=True, align='C')
+    pdf.ln(10)
+    
+    for result in results:
+        pdf.multi_cell(0, 10, result)
+        pdf.ln(5)
+    
+    pdf.output("Netflix_Recommendations.pdf")
+    messagebox.showinfo("PDF Generated", "The PDF has been successfully generated")
+
+# Funzione per raccogliere le preferenze dell'utente
+def submit_preferences():
+    content_type = content_type_var.get()
+    min_duration = min_duration_var.get()
+    max_duration = max_duration_var.get()
+    genres = [genre_var.get(i) for i in genre_var.curselection()]
+    cast = cast_entry.get()
+    planned_day = day_var.get()
+
+    preferences = {
+        "content_type": content_type,
+        "min_duration": min_duration,
+        "max_duration": max_duration,
+        "genres": genres,
+        "cast": cast,
+        "planned_day": planned_day
+    }
+
+    save_preferences(preferences)  # Salva le preferenze in un file
+
+    # Dati di esempio per i risultati
+    results = [
+        f"{content_type} - Title 1 - 100 min - {', '.join(genres)} - Cast: {cast}",
+        f"{content_type} - Title 2 - 120 min - {', '.join(genres)} - Cast: {cast}"
+    ]
+    
+    if len(results) > 0:
+        generate_pdf(results)
+        generate_calendar(results, planned_day)
+    else:
+        messagebox.showinfo("No Results", "No results match your preferences.")
+
+# Funzione per resettare i campi
+def reset_fields():
+    content_type_var.set("Movie")
+    min_duration_var.set(0)
+    max_duration_var.set(200)
+    genre_var.selection_clear(0, tk.END)
+    cast_entry.delete(0, tk.END)
+    day_var.set(days_of_week[0])
+
+# Creazione dell'interfaccia grafica
+root = tk.Tk()
+root.title("Netflix Recommendation System")
+
+# Frame per il tipo di contenuto
+type_frame = tk.LabelFrame(root, text="Content Type")
+type_frame.pack(fill="x", padx=5, pady=5)
+
+content_type_var = tk.StringVar(value="Movie")
+ttk.Radiobutton(type_frame, text="Movie", variable=content_type_var, value="Movie").pack(side="left", padx=5)
+ttk.Radiobutton(type_frame, text="TV Show", variable=content_type_var, value="TV Show").pack(side="left", padx=5)
+
+# Frame per la durata
+duration_frame = tk.LabelFrame(root, text="Duration (Minutes)")
+duration_frame.pack(fill="x", padx=5, pady=5)
+
+min_duration_var = tk.IntVar(value=0)
+max_duration_var = tk.IntVar(value=200)
+tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
+tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
+tk.Label(duration_frame, text="Max Duration").pack(side="left", padx=5)
+tk.Entry(duration_frame, textvariable=max_duration_var, width=5).pack(side="left", padx=5)
+
+# Frame per i generi
+genre_frame = tk.LabelFrame(root, text="Genres")
+genre_frame.pack(fill="x", padx=5, pady=5)
+
+genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]
+genre_var = tk.Listbox(genre_frame, selectmode="multiple", height=6)
+for genre in genres_list:
+    genre_var.insert(tk.END, genre)
+genre_var.pack(fill="x", padx=5, pady=5)
+
+# Frame per il cast
+cast_frame = tk.LabelFrame(root, text="Cast (Optional)")
+cast_frame.pack(fill="x", padx=5, pady=5)
+
+cast_entry = tk.Entry(cast_frame)
+cast_entry.pack(fill="x", padx=5, pady=5)
+
+# Frame per la selezione del giorno
+day_frame = tk.LabelFrame(root, text="Preferred Day")
+day_frame.pack(fill="x", padx=5, pady=5)
+
+days_of_week = list(calendar.day_name)
+day_var = tk.StringVar(value=days_of_week[0])
+ttk.Combobox(day_frame, textvariable=day_var, values=days_of_week).pack(fill="x", padx=5, pady=5)
+
+# Frame per i pulsanti
+button_frame = tk.Frame(root)
+button_frame.pack(fill="x", padx=5, pady=5)
+
+ttk.Button(button_frame, text="Submit", command=submit_preferences).pack(side="left", padx=5)
+ttk.Button(button_frame, text="Reset", command=reset_fields).pack(side="right", padx=5)
+
+# Avvio dell'interfaccia grafica
+root.mainloop()
+Spiegazione delle Modifiche:
+Selezione del giorno della settimana: È stato aggiunto un Combobox che permette all'utente di selezionare il giorno preferito per la visione. Questa selezione è gestita tramite day_var, una variabile di tipo StringVar.
+
+Calcolo della data pianificata: La funzione get_next_day_date(day_name) calcola la prossima occorrenza del giorno della settimana scelto, partendo dalla data odierna.
+
+Evidenziazione sul calendario: La funzione generate_calendar() evidenzia il giorno pianificato all'interno della visualizzazione del calendario, sottolineando o mettendo tra parentesi il giorno selezionato.
+
+Questo codice permette di pianificare visivamente la visione dei contenuti suggeriti, rendendo l'esperienza utente più intuitiva e interattiva.

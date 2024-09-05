@@ -1,5 +1,4 @@
 import tkinter as tk
-import pandas as pd
 from tkinter import ttk, messagebox
 import calendar
 from datetime import datetime
@@ -107,7 +106,7 @@ def preferences_filter(df, is_movie, is_show, min_duration, max_duration, select
         return []
 
     # Filtro finale
-    filtered_df = df[genre_mask & duration_mask & type_mask]
+    filtered_df = df[genre_mask & duration_mask & type_mask] # Se qui si aggiunge un .head(5), ad esempio il filtro contiene solo 5 contenuti
 
     # Creazione della lista di risultati formattati
     for _, item in filtered_df.iterrows():
@@ -180,8 +179,6 @@ def create_interface(df):
     # Variabili per la durata
     min_duration_var = tk.IntVar(value=0)
     max_duration_var = tk.IntVar(value=200)
-    # min_seasons_var = tk.IntVar(value=1)
-    # max_seasons_var = tk.IntVar(value=10)
     
     tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
     tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)

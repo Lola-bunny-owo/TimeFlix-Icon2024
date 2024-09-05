@@ -31,20 +31,26 @@ def generate_calendar(results, root):
 def generate_pdf(results):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    
+    # Registra il font TrueType
+    pdf.add_font("DejaVuSans", "", "dejavufonts/ttf/DejaVuSerif.ttf", uni=True)
+    pdf.set_font("DejaVuSans", size=12)  # Usa il font TrueType
     
     pdf.cell(200, 10, txt="Netflix Recommendations", ln=True, align='C')
     pdf.ln(10)
     
     for result in results:
         pdf.multi_cell(0, 10, result)
-        pdf.ln(5)
+        pdf.ln(5)  # Spazio tra i risultati
     
-    pdf.output("Netflix_Recommendations.pdf")
-    messagebox.showinfo("PDF Generated", "The PDF has been successfully generated")
+    try:
+        pdf.output("Netflix_Recommendations.pdf")
+        messagebox.showinfo("PDF Generated", "The PDF has been successfully generated")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred while generating the PDF: {e}")
 
 # Funzione per aggiornare il frame della durata in base al tipo di contenuto selezionato
-def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var, min_seasons_var, max_seasons_var):
+def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var):
     # Rimuove tutti i widget esistenti nel frame della durata
     for widget in duration_frame.winfo_children():
         widget.destroy()
@@ -59,82 +65,58 @@ def update_duration_frame(content_type, duration_frame, min_duration_var, max_du
     else:  # TV Show
         duration_frame.config(text="Duration (Seasons)")
         tk.Label(duration_frame, text="Min Seasons").pack(side="left", padx=5)
-        tk.Entry(duration_frame, textvariable=min_seasons_var, width=5).pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
         tk.Label(duration_frame, text="Max Seasons").pack(side="left", padx=5)
-        tk.Entry(duration_frame, textvariable=max_seasons_var, width=5).pack(side="left", padx=5)
+        tk.Entry(duration_frame, textvariable=max_duration_var, width=5).pack(side="left", padx=5)
+        
+     # Imposta i valori predefiniti per min e max duration / seasons
+    if content_type.get() == "Movie":
+        min_duration_var.set(0)
+        max_duration_var.set(200)
+    else:  # TV Show
+        min_duration_var.set(1)
+        max_duration_var.set(10)
 
-'''# Funzione che filtra i contenuti in base alle preferenze dell'utente -- TO FIX!! NON FUNZIONAAA NON CAPISCO PERCHÉ
-def preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres):
-    filtered_results = []
-
-    for _, item in df.iterrows():
-        # Recupera la colonna "Genre" e assicura che sia una lista
-        genres = item.get("Genre", [])
-        if isinstance(genres, str):  # Se è una stringa, convertila in lista
-            genres = genres.strip("[]").replace('"', '').split(", ")
-
-        print(f"Controllo item: {item.get('Title', 'N/A')}")
-        print(f"Genres: {genres}")
-
-        if is_movie:
-            print(f"Checking if item is a movie...")
-            if item.get("Is_Movie", False) and min_duration <= item.get("Films_Duration", 0) <= max_duration:
-                print(f"Item matches duration criteria for movies")
-                if any(genre in selected_genres for genre in genres):
-                    print(f"Item matches genre criteria for movies")
-                    filtered_results.append(f"Movie - {item.get('Title', 'N/A')} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(genres)}")
-
-        elif is_show:
-            print(f"Checking if item is a TV show...")
-            if item.get("Is_TVShow", False) and min_duration <= item.get("Shows_Duration", 0) <= max_duration:
-                print(f"Item matches duration criteria for TV shows")
-                if any(genre in selected_genres for genre in genres):
-                    print(f"Item matches genre criteria for TV shows")
-                    filtered_results.append(f"TV Show - {item.get('Title', 'N/A')} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(genres)}")
-
-    return filtered_results'''
+# Funzione per aggiornare la lista dei generi basata sul tipo di contenuto
+def update_genre_list(content_type, genre_var, df):
+    genre_list = []
     
+    if content_type == "Movie":
+        genre_list = sorted(set(genre for sublist in df['Genre_Film'].dropna() for genre in sublist))
+    elif content_type == "TV Show":
+        genre_list = sorted(set(genre for sublist in df['Genre_Shows'].dropna() for genre in sublist))
+    
+    genre_var.delete(0, tk.END)
+    for genre in genre_list:
+        genre_var.insert(tk.END, genre)
+
 # Funzione che filtra i contenuti in base alle preferenze dell'utente
 def preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres):
     filtered_results = []
 
-    for _, item in df.iterrows():
-        # Recupera la colonna "Genre" e assicura che sia una lista
-        genres = item.get("Genre", [])
-        if isinstance(genres, str):  # Se è una stringa, convertila in lista
-            genres = genres.strip("[]").replace("'", '').split(", ")
-            genres = [genre.strip() for genre in genres]  # Rimuove spazi superflui
+    # Maschera booleana per i generi basata sul tipo di contenuto
+    if is_movie:
+        genre_mask = df['Genre_Film'].apply(lambda x: any(genre in selected_genres for genre in x))
+        duration_mask = (df['Films_Duration'].fillna(0) >= min_duration) & (df['Films_Duration'].fillna(0) <= max_duration)
+        type_mask = df['Is_Movie'] == 1
+    elif is_show:
+        genre_mask = df['Genre_Shows'].apply(lambda x: any(genre in selected_genres for genre in x))
+        duration_mask = (df['Shows_Duration'].fillna(0) >= min_duration) & (df['Shows_Duration'].fillna(0) <= max_duration)
+        type_mask = df['Is_TVShow'] == 1
+    else:
+        return []
 
-        # Debugging per vedere cosa stiamo processando
-        print(f"Controllo item: {item.get('Title', 'N/A')}")
-        print(f"Genres: {genres}")
+    # Filtro finale
+    filtered_df = df[genre_mask & duration_mask & type_mask]
 
-        # Filtraggio per Film
+    # Creazione della lista di risultati formattati
+    for _, item in filtered_df.iterrows():
         if is_movie:
-            print(f"Checking if item is a movie...")
-            # Verifica che sia un film e che la durata sia all'interno dell'intervallo
-            films_duration = item.get("Films_Duration", 0)
-            if pd.notnull(films_duration) and min_duration <= films_duration <= max_duration:
-                print(f"Item matches duration criteria for movies")
-                # Verifica che almeno uno dei generi sia presente nei generi selezionati
-                if any(genre in selected_genres for genre in genres):
-                    print(f"Item matches genre criteria for movies")
-                    filtered_results.append(f"Movie - {item.get('Title', 'N/A')} - Duration: {films_duration} - Genres: {', '.join(genres)}")
-
-        # Filtraggio per Serie TV
-        if is_show:
-            print(f"Checking if item is a TV show...")
-            # Verifica che sia una serie TV e che la durata sia all'interno dell'intervallo
-            shows_duration = item.get("Shows_Duration", 0)
-            if pd.notnull(shows_duration) and min_duration <= shows_duration <= max_duration:
-                print(f"Item matches duration criteria for TV shows")
-                # Verifica che almeno uno dei generi sia presente nei generi selezionati
-                if any(genre in selected_genres for genre in genres):
-                    print(f"Item matches genre criteria for TV shows")
-                    filtered_results.append(f"TV Show - {item.get('Title', 'N/A')} - Seasons: {shows_duration} - Genres: {', '.join(genres)}")
+            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
+        elif is_show:
+            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Shows', []))}")
 
     return filtered_results
-    
 
 # Funzione per raccogliere le preferenze dell'utente
 def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root):
@@ -143,11 +125,10 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     is_movie = content_type == "Movie"
     is_show = content_type == "TV Show"
     
-    # Ottieni i valori delle variabili di durata o stagioni
-    min_duration = min_duration_var.get() if is_movie else 0
-    max_duration = max_duration_var.get() if is_movie else 0
-    
-    # genres = [genre_var.get(i) for i in genre_var.curselection()]
+    # Ottieni i valori delle variabili di durata
+    min_duration = min_duration_var.get()
+    max_duration = max_duration_var.get()
+
     # Ottieni i generi selezionati
     selected_genres = [genre_var.get(i) for i in genre_var.curselection()]
     cast = cast_entry.get()
@@ -164,15 +145,6 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     
     # Passa i parametri al filtro
     results = preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres)
-
-    '''
-    # Qui andrebbe implementata la logica per filtrare il dataset in base alle preferenze.
-    # Per ora, inseriamo dei dati di esempio.
-    results = [
-        f"{content_type} - Title 1 - 100 min - {', '.join(genres)} - Cast: {cast}",
-        f"{content_type} - Title 2 - 120 min - {', '.join(genres)} - Cast: {cast}"
-    ]
-    '''
     
     if len(results) > 0:
         generate_pdf(results)
@@ -208,8 +180,8 @@ def create_interface(df):
     # Variabili per la durata
     min_duration_var = tk.IntVar(value=0)
     max_duration_var = tk.IntVar(value=200)
-    min_seasons_var = tk.IntVar(value=1)
-    max_seasons_var = tk.IntVar(value=10)
+    # min_seasons_var = tk.IntVar(value=1)
+    # max_seasons_var = tk.IntVar(value=10)
     
     tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
     tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
@@ -218,19 +190,20 @@ def create_interface(df):
 
     # Aggiorna il frame della durata quando cambia il tipo di contenuto
     content_type_var.trace_add('write', lambda *args: update_duration_frame(
-        content_type_var, duration_frame, min_duration_var, max_duration_var, min_seasons_var, max_seasons_var))
+        content_type_var, duration_frame, min_duration_var, max_duration_var))
 
     # Frame per i generi
     genre_frame = tk.LabelFrame(root, text="Genres")
     genre_frame.pack(fill="x", padx=5, pady=5)
 
-    # Nota bene: dovremmo avere come lista dei generi una lista esaustiva che raggruppi i generi per film e generi per serie tv.
-    # non va bene avere l'elenco scritto da noi -> c'è bisogno di un modo per mappare la scelta all'operazione che avviene nel dataset (filtraggio secondo le preferenze)
-    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]
     genre_var = tk.Listbox(genre_frame, selectmode="multiple", height=6)
-    for genre in genres_list:
-        genre_var.insert(tk.END, genre)
     genre_var.pack(fill="x", padx=5, pady=5)
+    
+    # Aggiorna la lista dei generi basata sul tipo di contenuto iniziale
+    update_genre_list(content_type_var.get(), genre_var, df)
+
+    # Aggiorna la lista dei generi quando cambia il tipo di contenuto
+    content_type_var.trace_add('write', lambda *args: update_genre_list(content_type_var.get(), genre_var, df))
 
     # Frame per il cast
     cast_frame = tk.LabelFrame(root, text="Cast (Optional)")

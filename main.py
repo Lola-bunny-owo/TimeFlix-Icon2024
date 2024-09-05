@@ -74,8 +74,8 @@ preprocessing.print_null_values(df, columns_to_exclude)
 print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(10))
 
 # Embedding WORD2VEC per la colonna 'listed_in', One-Hot Encoding per la colonna 'type'
+df= preprocessing.one_hot_enc(df) 
 preprocessing.w2v(df)
-df= preprocessing.one_hot_enc(df)
 
 # Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'. Renaming delle colonne
 columns_to_remove= ["release_year", "country", "date_added", "listed_in", "duration"]

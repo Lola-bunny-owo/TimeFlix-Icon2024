@@ -147,3 +147,104 @@ ttk.Button(button_frame, text="Reset", command=reset_fields).pack(side="right", 
 # Avvio dell'interfaccia grafica
 root.mainloop()
 '''
+
+---------------------------------------------------------------------
+IMPORTANTE: CODICE PER IL FILTRAGGIO NON FUNZIONANTE, LO METTO QUI PER CAPIRCI QUALCOSA IN PIÙ.
+
+# Funzione che filtra i contenuti in base alle preferenze dell'utente
+'''def preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres):
+    filtered_results= []
+    
+    for _, item in df.iterrows():
+        genres = item.get("Genre", [])
+        
+        print(f"Controllo item: {item['Title']}")
+        print(f"Genres: {genres}")
+        
+        if is_movie:
+            print(f"Checking if item is a movie...")
+            if item.get("Is_Movie", False) and min_duration <= item.get("Films_Duration", 0) <= max_duration:
+                print(f"Item matches duration criteria for movies")
+                if any(genre in genres for genre in selected_genres):
+                    print(f"Item matches genre criteria for movies")
+                    filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(genres)}")
+        elif is_show:
+            print(f"Checking if item is a TV show...")
+            if item.get("Is_TVShow", False) and min_duration <= item.get("Shows_Duration", 0) <= max_duration:
+                print(f"Item matches duration criteria for TV shows")
+                if any(genre in genres for genre in selected_genres):
+                    print(f"Item matches genre criteria for TV shows")
+                    filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(genres)}")
+    
+    return filtered_results'''
+
+# Funzione che filtra i contenuti in base alle preferenze dell'utente -- TO FIX!! NON FUNZIONAAA NON CAPISCO PERCHÉ
+def preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres):
+    filtered_results = []
+
+    for _, item in df.iterrows():
+        # Recupera la colonna "Genre" e assicura che sia una lista
+        genres = item.get("Genre", [])
+        if isinstance(genres, str):  # Se è una stringa, convertila in lista
+            genres = genres.strip("[]").replace('"', '').split(", ")
+
+        print(f"Controllo item: {item.get('Title', 'N/A')}")
+        print(f"Genres: {genres}")
+
+        if is_movie:
+            print(f"Checking if item is a movie...")
+            if item.get("Is_Movie", False) and min_duration <= item.get("Films_Duration", 0) <= max_duration:
+                print(f"Item matches duration criteria for movies")
+                if any(genre in selected_genres for genre in genres):
+                    print(f"Item matches genre criteria for movies")
+                    filtered_results.append(f"Movie - {item.get('Title', 'N/A')} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(genres)}")
+
+        elif is_show:
+            print(f"Checking if item is a TV show...")
+            if item.get("Is_TVShow", False) and min_duration <= item.get("Shows_Duration", 0) <= max_duration:
+                print(f"Item matches duration criteria for TV shows")
+                if any(genre in selected_genres for genre in genres):
+                    print(f"Item matches genre criteria for TV shows")
+                    filtered_results.append(f"TV Show - {item.get('Title', 'N/A')} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(genres)}")
+
+    return filtered_results
+   
+---------------------------------------------------------------------
+Se servisse fare nuovamente debug per i filtri:
+
+'''
+print("\nEcco qui il momento delle stampe prove per capirci qualcosa sul codice: \n")
+print(df[['Title', 'Genre_Film', 'Genre_Shows', 'Films_Duration', 'Shows_Duration']])
+
+# Esempio di filtro base per i film
+suggerimenti1 = df[
+    (df['Films_Duration'] >= 1) & 
+    (df['Is_Movie'] == 1) & 
+    (df['Genre_Film'].apply(lambda genres: any('Faith & Spirituality' in genre for genre in genres)))
+]
+suggerimenti1 = suggerimenti1.drop(columns=['ID', 'Director', 'genre_embedding_film', 'genre_embedding_shows'])
+
+print("\nSuggerimenti 1:\n", suggerimenti1.head(5))
+
+
+# Esempio di filtro base per le serie tv
+suggerimenti2 = df[
+    (df['Shows_Duration'] >= 1) & 
+    (df['Is_TVShow'] == 1) & 
+    (df['Genre_Shows'].apply(lambda genres: any('Comedies' in genre for genre in genres)))
+]
+suggerimenti2 = suggerimenti2.drop(columns=['ID', 'Director', 'genre_embedding_film', 'genre_embedding_shows'])
+
+print("\nSuggerimenti 2:\n", suggerimenti2.head(5))      
+
+# Controlla ogni condizione individualmente
+cond1 = df['Films_Duration'] <= 10    # funziona
+cond2 = df['Is_Movie'] == 1     # funziona
+cond3 = df['Genre_Film'].apply(lambda genres: 'Comedies' in genres)   # funziona
+
+print("Cond1", df[cond1])  # Condizione 1
+print("Cond2", df[cond2])  # Condizione 2
+print("Cond3", df[cond3])  # Condizione 3
+'''
+
+    

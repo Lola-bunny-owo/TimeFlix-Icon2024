@@ -42,34 +42,6 @@ def print_null_values(df, columns_to_exclude):
     print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato è null:\n",
           df.drop(columns= columns_to_exclude).isnull().head(10))
 
-# Funzione per l'applicazione del W2V alla colonna 'listed_in'
-def w2v(df):
-    
-    # Preprocessing della colonna 'listed_in' per creare una lista di generi
-    # Dividi i generi in liste di parole (liste di generi per titolo)
-    df['listed_in_clean'] = df['listed_in'].apply(lambda x: x.split(', '))
-    
-    # Addestramento del modello Word2Vec sulle liste di generi
-    model = Word2Vec(sentences=df['listed_in_clean'], vector_size=100, window=5, min_count=1, workers=4, sg=0)
-
-    # Ottenere gli embeddings per tutti i generi estraendo l'elenco di generi unici
-    genres_vocab = list(model.wv.key_to_index.keys())
-    print(f"Generi nel vocabolario del modello Word2Vec: {genres_vocab}")
-
-    # Recuperiamo l'embedding per ogni genere nel vocabolario
-    genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
-
-    print("\nEmbedding per alcuni generi:")    # Esempio
-    for genre in ['International Movies', 'Dramas']: 
-        print(f"{genre}: {genre_embeddings[genre]}\n")
-
-    # Creare embedding medio per ogni titolo
-    df['genre_embedding'] = df['listed_in_clean'].apply(lambda x: model.wv[x].mean(axis=0))
-
-    # Mostrare i primi embedding medi per i titoli
-    print("\nEmbedding medio per i primi 5 titoli:")
-    print(df[['title', 'genre_embedding']].head())
-
 # Funzione per il One-Hot Encoding sulla colonna 'type'
 def one_hot_enc(df):
     
@@ -79,6 +51,36 @@ def one_hot_enc(df):
     print("\nPrime righe del DataFrame con la colonna 'type' one-hot encoded:")
     print(df[['title', 'type_Movie', 'type_TV Show']].head())
     return df
+
+# Funzione per l'applicazione del W2V alla colonna 'listed_in' con due embedding e due liste separate Film/Serie Tv
+def w2v(df):
+    
+    # Preprocessing della colonna 'listed_in' per creare una lista di generi
+    # Creazione delle liste di generi per i film e per le serie TV
+    df['Genre_Film'] = df.apply(lambda x: x['listed_in'].split(', ') if x['type_Movie'] else [], axis=1)
+    df['Genre_Show'] = df.apply(lambda x: x['listed_in'].split(', ') if x['type_TV Show'] else [], axis=1)
+    
+    # Addestramento del modello Word2Vec sui generi dei film e delle serie TV combinati
+    all_genres = df['Genre_Film'] + df['Genre_Show']
+    model = Word2Vec(sentences=all_genres, vector_size=100, window=5, min_count=1, workers=4, sg=0)
+
+    # Ottenere gli embeddings per tutti i generi estraendo l'elenco di generi unici
+    genres_vocab = list(model.wv.key_to_index.keys())
+    print(f"\nGeneri nel vocabolario del modello Word2Vec:\n{genres_vocab}")
+
+    # Recuperiamo l'embedding per ogni genere nel vocabolario
+    genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
+
+    print("\nEmbedding per alcuni generi:")    # Esempio
+    for genre in ['International Movies', 'Dramas']: 
+        print(f"{genre}: {genre_embeddings[genre]}\n")
+
+    # Creazione degli embedding medi per film e serie TV
+    df['Genre_Embedding_Film'] = df['Genre_Film'].apply(lambda x: model.wv[x].mean(axis=0) if x else None)
+    df['Genre_Embedding_Show'] = df['Genre_Show'].apply(lambda x: model.wv[x].mean(axis=0) if x else None)
+
+    print("\nEmbedding medio per i primi 5 titoli (film e serie TV):")
+    print(df[['title', 'Genre_Embedding_Film', 'Genre_Embedding_Show']].head())
 
 # Funzione per la eliminazione delle colonne
 def delete_feature(df, columns):
@@ -116,12 +118,10 @@ def rename_feature(df):
         'description': 'Description',
         'cast': 'Cast',
         'rating': 'Classification',
-        'listed_in_clean': 'Genre',
-        'duration_numeric_film': 'Films_Duration',
-        'duration_numeric_shows': 'Shows_Duration',
-        'genre_embedding': 'Genre_Embedding',
+        'duration_numeric_film': 'Film_Duration',
+        'duration_numeric_shows': 'Show_Duration',
         'type_Movie': 'Is_Movie',
-        'type_TV Show': 'Is_TVShow',
+        'type_TV Show': 'Is_Show',
         'duration_numeric': 'Duration_numeric',
     }
     

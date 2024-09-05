@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import calendar
-from datetime import datetime
+from datetime import datetime, timedelta
 from fpdf import FPDF
 import json  # Importa il modulo JSON per salvare le preferenze
 
@@ -25,9 +25,9 @@ def generate_calendar(results, root):
 
     result_label = tk.Label(top, text="\n".join(results), justify='left')
     result_label.pack(pady=10)
-
+    
+# Codifica in 'ascii' ignorando i caratteri non supportati
 def clean_text(text):
-    # Codifica in 'ascii' ignorando i caratteri non supportati
     return text.encode('ascii', 'ignore').decode('ascii')
 
 def generate_pdf(results, preferred_day, start_time, end_time):
@@ -170,7 +170,7 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
 
-# Funzione per visualizzare la pianificazione settimanale nel calendario
+# Funzione per visualizzare la pianificazione settimanale nel calendario con le date correnti
 def display_schedule(day, start_time, end_time, recommendations, root):
     # Crea una finestra secondaria per il calendario
     calendar_window = tk.Toplevel(root)
@@ -179,19 +179,30 @@ def display_schedule(day, start_time, end_time, recommendations, root):
     # Giorni della settimana
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-    # Crea una griglia di etichette per rappresentare il calendario
+    # Trova la data corrente
+    today = datetime.now()
+    
+    # Calcola il primo giorno della settimana (assumendo che la settimana inizi il lunedì)
+    start_of_week = today - timedelta(days=today.weekday())  # Il lunedì della settimana corrente
+
+    # Crea una griglia di etichette per rappresentare il calendario con le date
     for i, day_name in enumerate(days_of_week):
-        label = tk.Label(calendar_window, text=day_name, font=("Arial", 10, "bold"))
+        # Calcola la data per ogni giorno della settimana
+        current_day = start_of_week + timedelta(days=i)
+        date_str = current_day.strftime("%d %b %Y")  # Formatta la data (es. "01 Sep 2023")
+        
+        # Mostra il giorno della settimana e la data
+        label = tk.Label(calendar_window, text=f"{day_name} - {date_str}", font=("Arial", 10, "bold"))
         label.grid(row=0, column=i, padx=5, pady=5)
 
     # Imposta il giorno e l'orario pianificato
-    time_label = tk.Label(calendar_window, text=f"{start_time} - {end_time}", bg="white", font=("Arial", 10))
+    time_label = tk.Label(calendar_window, text=f"{start_time} - {end_time}", bg="lightgreen", font=("Arial", 10))
     col_index = days_of_week.index(day)  # Trova l'indice del giorno selezionato
     time_label.grid(row=1, column=col_index, padx=5, pady=5)
 
     # Mostra le raccomandazioni nel giorno selezionato (fino a 5)
     for i, rec in enumerate(recommendations[:5]):  # Mostra solo le prime 5 raccomandazioni
-        recommendation_label = tk.Label(calendar_window, text=rec, bg="white", font=("Arial", 8))
+        recommendation_label = tk.Label(calendar_window, text=rec, bg="lightblue", font=("Arial", 8))
         recommendation_label.grid(row=i + 2, column=col_index, padx=5, pady=5)
 
 

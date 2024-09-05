@@ -26,27 +26,39 @@ def generate_calendar(results, root):
     result_label = tk.Label(top, text="\n".join(results), justify='left')
     result_label.pack(pady=10)
 
-# Funzione per generare un pdf con i suggerimenti e la pianificazione.
-def generate_pdf(results):
+def clean_text(text):
+    # Codifica in 'ascii' ignorando i caratteri non supportati
+    return text.encode('ascii', 'ignore').decode('ascii')
+
+def generate_pdf(results, preferred_day, start_time, end_time):
     pdf = FPDF()
     pdf.add_page()
     
-    # Registra il font TrueType
-    pdf.add_font("DejaVuSans", "", "dejavufonts/ttf/DejaVuSerif.ttf", uni=True)
-    pdf.set_font("DejaVuSans", size=12)  # Usa il font TrueType
-    
-    pdf.cell(200, 10, txt="Netflix Recommendations", ln=True, align='C')
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Netflix Recommendations and Weekly Schedule", ln=True, align='C')
     pdf.ln(10)
-    
+
+    # Scrivi i risultati filtrati nel PDF
+    pdf.cell(200, 10, txt="Here are your recommendations:", ln=True)
+    pdf.ln(10)
     for result in results:
-        pdf.multi_cell(0, 10, result)
-        pdf.ln(5)  # Spazio tra i risultati
-    
+        result_cleaned = clean_text(result)
+        pdf.multi_cell(0, 10, result_cleaned)
+        pdf.ln(5)
+
+    # Scrivi la pianificazione settimanale nel PDF
+    pdf.cell(200, 10, txt=f"Your preferred schedule is:", ln=True)
+    pdf.ln(5)
+    pdf.cell(200, 10, txt=f"Day: {preferred_day}", ln=True)
+    pdf.cell(200, 10, txt=f"Time: {start_time} - {end_time}", ln=True)
+
+    # Salva il file PDF
     try:
-        pdf.output("Netflix_Recommendations.pdf")
-        messagebox.showinfo("PDF Generated", "The PDF has been successfully generated")
+        pdf.output("Netflix_Recommendations_and_Schedule.pdf")
+        messagebox.showinfo("PDF Generated", "The PDF has been successfully generated with your schedule.")
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred while generating the PDF: {e}")
+
 
 # Funzione per aggiornare il frame della durata in base al tipo di contenuto selezionato
 def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var):
@@ -96,11 +108,11 @@ def preferences_filter(df, is_movie, is_show, min_duration, max_duration, select
     # Maschera booleana per i generi basata sul tipo di contenuto
     if is_movie:
         genre_mask = df['Genre_Film'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Films_Duration'].fillna(0) >= min_duration) & (df['Films_Duration'].fillna(0) <= max_duration)
+        duration_mask = (df['Film_Duration'].fillna(0) >= min_duration) & (df['Film_Duration'].fillna(0) <= max_duration)
         type_mask = df['Is_Movie'] == 1
     elif is_show:
         genre_mask = df['Genre_Show'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Shows_Duration'].fillna(0) >= min_duration) & (df['Shows_Duration'].fillna(0) <= max_duration)
+        duration_mask = (df['Show_Duration'].fillna(0) >= min_duration) & (df['Show_Duration'].fillna(0) <= max_duration)
         type_mask = df['Is_TVShow'] == 1
     else:
         return []
@@ -111,9 +123,9 @@ def preferences_filter(df, is_movie, is_show, min_duration, max_duration, select
     # Creazione della lista di risultati formattati
     for _, item in filtered_df.iterrows():
         if is_movie:
-            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
+            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Film_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
         elif is_show:
-            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
+            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Show_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
 
     return filtered_results
 
@@ -131,7 +143,6 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     # Ottieni i generi selezionati
     selected_genres = [genre_var.get(i) for i in genre_var.curselection()]
 
-    
     # Ottieni il giorno della settimana e l'intervallo di tempo
     preferred_day = day_var.get()
     start_time = start_time_var.get()
@@ -153,10 +164,36 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     results = preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres)
     
     if len(results) > 0:
-        generate_pdf(results)
-        generate_calendar(results, root)
+        # Passa la lista di raccomandazioni (massimo 5) alla funzione display_schedule
+        display_schedule(preferred_day, start_time, end_time, results[:5], root)
+        generate_pdf(results, preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
+
+# Funzione per visualizzare la pianificazione settimanale nel calendario
+def display_schedule(day, start_time, end_time, recommendations, root):
+    # Crea una finestra secondaria per il calendario
+    calendar_window = tk.Toplevel(root)
+    calendar_window.title("Weekly Schedule")
+
+    # Giorni della settimana
+    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    # Crea una griglia di etichette per rappresentare il calendario
+    for i, day_name in enumerate(days_of_week):
+        label = tk.Label(calendar_window, text=day_name, font=("Arial", 10, "bold"))
+        label.grid(row=0, column=i, padx=5, pady=5)
+
+    # Imposta il giorno e l'orario pianificato
+    time_label = tk.Label(calendar_window, text=f"{start_time} - {end_time}", bg="white", font=("Arial", 10))
+    col_index = days_of_week.index(day)  # Trova l'indice del giorno selezionato
+    time_label.grid(row=1, column=col_index, padx=5, pady=5)
+
+    # Mostra le raccomandazioni nel giorno selezionato (fino a 5)
+    for i, rec in enumerate(recommendations[:5]):  # Mostra solo le prime 5 raccomandazioni
+        recommendation_label = tk.Label(calendar_window, text=rec, bg="white", font=("Arial", 8))
+        recommendation_label.grid(row=i + 2, column=col_index, padx=5, pady=5)
+
 
 # Funzione per resettare i campi
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var):

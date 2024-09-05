@@ -80,10 +80,10 @@ def update_duration_frame(content_type, duration_frame, min_duration_var, max_du
 def update_genre_list(content_type, genre_var, df):
     genre_list = []
     
-    if content_type == "Movie":
+    if content_type == "Movie" and 'Genre_Film' in df.columns:
         genre_list = sorted(set(genre for sublist in df['Genre_Film'].dropna() for genre in sublist))
-    elif content_type == "TV Show":
-        genre_list = sorted(set(genre for sublist in df['Genre_Shows'].dropna() for genre in sublist))
+    elif content_type == "TV Show" and 'Genre_Show' in df.columns:
+        genre_list = sorted(set(genre for sublist in df['Genre_Show'].dropna() for genre in sublist))
     
     genre_var.delete(0, tk.END)
     for genre in genre_list:
@@ -99,7 +99,7 @@ def preferences_filter(df, is_movie, is_show, min_duration, max_duration, select
         duration_mask = (df['Films_Duration'].fillna(0) >= min_duration) & (df['Films_Duration'].fillna(0) <= max_duration)
         type_mask = df['Is_Movie'] == 1
     elif is_show:
-        genre_mask = df['Genre_Shows'].apply(lambda x: any(genre in selected_genres for genre in x))
+        genre_mask = df['Genre_Show'].apply(lambda x: any(genre in selected_genres for genre in x))
         duration_mask = (df['Shows_Duration'].fillna(0) >= min_duration) & (df['Shows_Duration'].fillna(0) <= max_duration)
         type_mask = df['Is_TVShow'] == 1
     else:
@@ -113,12 +113,12 @@ def preferences_filter(df, is_movie, is_show, min_duration, max_duration, select
         if is_movie:
             filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Films_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
         elif is_show:
-            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Shows', []))}")
+            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Shows_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
 
     return filtered_results
 
 # Funzione per raccogliere le preferenze dell'utente
-def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root):
+def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root):
     
     content_type = content_type_var.get()
     is_movie = content_type == "Movie"
@@ -130,14 +130,21 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
 
     # Ottieni i generi selezionati
     selected_genres = [genre_var.get(i) for i in genre_var.curselection()]
-    cast = cast_entry.get()
+
+    
+    # Ottieni il giorno della settimana e l'intervallo di tempo
+    preferred_day = day_var.get()
+    start_time = start_time_var.get()
+    end_time = end_time_var.get()
 
     preferences = {
         "content_type": content_type,
         "min_duration": min_duration,
         "max_duration": max_duration,
         "genres": selected_genres,
-        "cast": cast
+        "preferred_day": preferred_day,
+        "start_time": start_time,
+        "end_time": end_time
     }
 
     save_preferences(preferences)  # Salva le preferenze in un file
@@ -152,12 +159,12 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         messagebox.showinfo("No Results", "No results match your preferences.")
 
 # Funzione per resettare i campi
-def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry):
+def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var):
     content_type_var.set("Movie")
     min_duration_var.set(0)
     max_duration_var.set(200)
     genre_var.selection_clear(0, tk.END)
-    cast_entry.delete(0, tk.END)
+
 
 # Funzione per creare e avviare l'interfaccia grafica
 def create_interface(df):
@@ -202,21 +209,50 @@ def create_interface(df):
     # Aggiorna la lista dei generi quando cambia il tipo di contenuto
     content_type_var.trace_add('write', lambda *args: update_genre_list(content_type_var.get(), genre_var, df))
 
-    # Frame per il cast
-    cast_frame = tk.LabelFrame(root, text="Cast (Optional)")
-    cast_frame.pack(fill="x", padx=5, pady=5)
+    # Frame per la selezione del giorno della settimana
+    day_frame = tk.LabelFrame(root, text="Preferred Day of the Week")
+    day_frame.pack(fill="x", padx=5, pady=5)
 
-    cast_entry = tk.Entry(cast_frame)
-    cast_entry.pack(fill="x", padx=5, pady=5)
+    # Aggiungi una lista di selezione per i giorni della settimana
+    day_var = tk.StringVar(value="Monday")
+    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_menu = ttk.Combobox(day_frame, textvariable=day_var, values=days_of_week, state="readonly")
+    day_menu.pack(padx=5, pady=5)
+    day_menu.current(0)  # Seleziona "Monday" di default
+
+    # Frame per la selezione dell'intervallo di tempo
+    time_frame = tk.LabelFrame(root, text="Preferred Time Interval")
+    time_frame.pack(fill="x", padx=5, pady=5)
+
+    # Variabili per l'orario di inizio e fine
+    start_time_var = tk.StringVar(value="00:00")
+    end_time_var = tk.StringVar(value="00:00")
+
+    tk.Label(time_frame, text="Start Time").pack(side="left", padx=5)
+    tk.Entry(time_frame, textvariable=start_time_var, width=5).pack(side="left", padx=5)
+    tk.Label(time_frame, text="End Time").pack(side="left", padx=5)
+    tk.Entry(time_frame, textvariable=end_time_var, width=5).pack(side="left", padx=5)
 
     # Frame per i pulsanti
     button_frame = tk.Frame(root)
     button_frame.pack(fill="x", padx=5, pady=5)
 
     ttk.Button(button_frame, text="Submit", command=lambda: submit_preferences(
-        df, content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry, root)).pack(side="right", padx=5)
+        df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root)).pack(side="right", padx=5)
     ttk.Button(button_frame, text="Reset", command=lambda: reset_fields(
-        content_type_var, min_duration_var, max_duration_var, genre_var, cast_entry)).pack(side="left", padx=5)
+        content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var)).pack(side="left", padx=5)
 
     # Avvio dell'interfaccia grafica
     root.mainloop()
+    
+    # Funzione per resettare i campi
+def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
+    content_type_var.set("Movie")
+    min_duration_var.set(0)
+    max_duration_var.set(200)
+    genre_var.selection_clear(0, tk.END)
+        
+    # Reset dei campi relativi al giorno e all'orario
+    day_var.set("Monday")
+    start_time_var.set("00:00")
+    end_time_var.set("00:00")

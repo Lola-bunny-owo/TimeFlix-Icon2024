@@ -60,10 +60,14 @@ df = preprocessing.manage_outliers(df, duration_film_outliers, 'duration_numeric
 df = preprocessing.manage_outliers(df, duration_shows_outliers, 'duration_numeric_shows', manual_threshold=manual_show_threshold)
 
 # Verifica degli outliers rimanenti dopo la gestione
+# Trova gli outliers per i film e le serie TV usando i percentili
 updated_film_outliers = eda.find_outliers(df, 'duration_numeric_film', percentile=0.99)
-#print(f"\nOutliers sui film aggiornati - rimossi i film di durata > {manual_film_threshold} minuti:\n", updated_film_outliers)
+print(f"\nOutliers sui film aggiornati - rimossi i film di durata superiore a {manual_film_threshold} minuti:\n")
+print(updated_film_outliers[['title', 'duration_numeric_film']]) 
+
 updated_show_outliers = eda.find_outliers(df, 'duration_numeric_shows', percentile=0.99)
-#print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con #stagioni > {manual_show_threshold}:\n", updated_show_outliers)
+print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con più di {manual_show_threshold} stagioni:\n")
+print(updated_show_outliers[['title', 'duration_numeric_shows']])
 
 # Gestione dei valori nulli e dei duplicati
 df = preprocessing.manage_null_values(df)

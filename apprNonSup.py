@@ -25,7 +25,19 @@ def standardize_values(embedding_array):
     embeddings_scaled= scaler.fit_transform(embedding_array)
     return embeddings_scaled
 
-# Applicazione della tecnica PCA con numero di componenti preso in input
+# Funzione che applica agli embeddings le due operazioni di conversione e standardizzazione
+def preprocess_embeddings(df, embedding_column):
+     # Conversione degli embeddings in array di float
+    embeddings_array = convert_embeddings(df, embedding_column)
+    print(f"\nEmbeddings convertiti per {embedding_column}: ", embeddings_array[:3])
+
+    # Standardizzazione degli embeddings
+    embeddings_array = standardize_values(embeddings_array)
+    print(f"\nEmbeddings standardizzati per {embedding_column}: ", embeddings_array[:3])
+
+    return embeddings_array
+    
+# Tecnica PCA con numero di componenti preso in input
 def pca(n_components, embeddings_scaled):
     pca = PCA(n_components= n_components)
     embeddings_pca= pca.fit_transform(embeddings_scaled)
@@ -34,14 +46,28 @@ def pca(n_components, embeddings_scaled):
     return embeddings_pca, explained_variance
 
 # Funzione per visualizzare la varianza spiegata cumulativa
-def plot_explained_variance(explained_variance):
+def plot_explained_variance(explained_variance, title):
     plt.figure(figsize=(8, 6))
     plt.plot(range(1, len(explained_variance) + 1), explained_variance, marker='o')
     plt.xlabel('Numero di Componenti Principali')
     plt.ylabel('Varianza Spiegata Cumulativa')
-    plt.title('Varianza Spiegata Cumulativa vs Numero di Componenti Principali')
+    plt.title(f'Varianza Spiegata Cumulativa vs Numero di Componenti Principali per {title}')
     plt.grid(True)
     plt.show()
+
+# Applicazione della PCA e stampa dei plot
+def apply_pca_and_plot(n_components, embeddings, title):
+    
+    # Applicazione della PCA
+    embeddings_pca, explained_variance = pca(n_components, embeddings)
+    print(f"\nGrafico della varianza spiegata cumulativa per {title} con {n_components} componenti: ")
+    plot_explained_variance(explained_variance, title)
+    return embeddings_pca, explained_variance
+
+def calculate_components_needed(explained_variance, threshold_comp, title):
+    components_needed = np.argmax(explained_variance >= threshold_comp) + 1
+    print(f"\nNumero di componenti principali necessarie per mantenere il {threshold_comp * 100}% della varianza per {title}: {components_needed}")
+    return components_needed
 
 # Funzione per aggiornare il df con i nuovi embeddings PCA
 def update_embeddings_in_df(df, new_embeddings, column):

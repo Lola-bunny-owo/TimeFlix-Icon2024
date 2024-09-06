@@ -83,50 +83,31 @@ print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= [
 df= preprocessing.one_hot_enc(df) 
 preprocessing.w2v(df)
 
-### PCA - Apprendimento Non Supervisionato ###
+#### PCA - Apprendimento Non Supervisionato ###
 
 # Conversione degli embeddings in array di float e standardizzazione degli array
-embeddings_array_film= apprNonSup.convert_embeddings(df, 'Genre_Embedding_Film')
-embeddings_array_show= apprNonSup.convert_embeddings(df, 'Genre_Embedding_Show')
-embeddings_array_film= apprNonSup.standardize_values(embeddings_array_film)
-embeddings_array_show= apprNonSup.standardize_values(embeddings_array_show)
+embeddings_array_film = apprNonSup.preprocess_embeddings(df, 'Genre_Embedding_Film')
+embeddings_array_show = apprNonSup.preprocess_embeddings(df, 'Genre_Embedding_Show')
 
-max_components= 50 # Numero di componenti iniziali
-
-# Applicazione della tecnica pca su 50 componenti
-embeddings_film_pca, explained_variance_film = apprNonSup.pca(max_components, embeddings_array_film)
-embeddings_show_pca, explained_variance_show = apprNonSup.pca(max_components, embeddings_array_show)
-
-# Visualizzazione della varianza spiegata cumulativa per i film e serie tv con 50 componenti
-print("\nVarianza spiegata cumulativa per i film:")
-apprNonSup.plot_explained_variance(explained_variance_film)
-print("\nVarianza spiegata cumulativa per le serie tv:")
-apprNonSup.plot_explained_variance(explained_variance_show)
+max_components= 30 # Numero di componenti iniziali
+# Applicazione della PCA e visualizzazione della varianza per film e serie TV per 30 componenti
+embeddings_film_pca, explained_variance_film = apprNonSup.apply_pca_and_plot(max_components, embeddings_array_film, "i film")
+embeddings_show_pca, explained_variance_show = apprNonSup.apply_pca_and_plot(max_components, embeddings_array_show, "le serie TV")
 
 # Calcola il numero di componenti necessarie per raggiungere la soglia del 95% di varianza
 threshold_comp = 0.95 
-components_needed_film = np.argmax(explained_variance_film >= threshold_comp) + 1
-print(f"\nNumero di componenti principali necessarie per mantenere il {threshold_comp * 100}% della varianza per i film: {components_needed_film}")
-components_needed_show = np.argmax(explained_variance_show >= threshold_comp) + 1
-print(f"\nNumero di componenti principali necessarie per mantenere il {threshold_comp * 100}% della varianza per le serie tv: {components_needed_show}")
+components_needed_film = apprNonSup.calculate_components_needed(explained_variance_film, threshold_comp, "i film")
+components_needed_show = apprNonSup.calculate_components_needed(explained_variance_show, threshold_comp, "le serie TV")
 
 # Ricalcola il pca sul numero di componenti per film e per serie tv
-embeddings_film_pca, explained_variance_film = apprNonSup.pca(components_needed_film, embeddings_array_film)
-embeddings_show_pca, explained_variance_show = apprNonSup.pca(components_needed_show, embeddings_array_show)
-
-# Visualizzazione della varianza spiegata cumulativa per i film e serie tv con le nuove componenti
-print("\nVarianza spiegata cumulativa per i film:")
-apprNonSup.plot_explained_variance(explained_variance_film)
-print("\nVarianza spiegata cumulativa per le serie tv:")
-apprNonSup.plot_explained_variance(explained_variance_show)
+embeddings_film_pca, explained_variance_film = apprNonSup.apply_pca_and_plot(components_needed_film, embeddings_array_film, "i film")
+embeddings_show_pca, explained_variance_show = apprNonSup.apply_pca_and_plot(components_needed_show, embeddings_array_show, "le serie TV")
 
 # Aggiorna il DataFrame con gli embeddings PCA trasformati
 apprNonSup.update_embeddings_in_df(df, embeddings_film_pca, 'Genre_Embedding_Film')
 apprNonSup.update_embeddings_in_df(df, embeddings_show_pca, 'Genre_Embedding_Show')
 
-# Stampa di controllo per verificare che gli embeddings siano stati aggiornati
-print(df[['Genre_Embedding_Film', 'Genre_Embedding_Show']].head(5))
-
+### FINE PCA ###
 
 # Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'. Renaming delle colonne
 columns_to_remove= ["release_year", "country", "date_added", "listed_in", "duration"]

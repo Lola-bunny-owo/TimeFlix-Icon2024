@@ -4,6 +4,7 @@ import calendar
 from datetime import datetime, timedelta
 from fpdf import FPDF
 import json  # Importa il modulo JSON per salvare le preferenze
+import random
 
 # Funzione per salvare le preferenze in un file JSON
 def save_preferences(preferences):
@@ -30,7 +31,7 @@ def generate_calendar(results, root):
 def clean_text(text):
     return text.encode('ascii', 'ignore').decode('ascii')
 
-def generate_pdf(results, preferred_day, start_time, end_time):
+def generate_pdf(recommendations, preferred_day, start_time, end_time):
     pdf = FPDF()
     pdf.add_page()
     
@@ -38,10 +39,10 @@ def generate_pdf(results, preferred_day, start_time, end_time):
     pdf.cell(200, 10, txt="Netflix Recommendations and Weekly Schedule", ln=True, align='C')
     pdf.ln(10)
 
-    # Scrivi i risultati filtrati nel PDF
-    pdf.cell(200, 10, txt="Here are your recommendations:", ln=True)
+    # Scrivi i risultati filtrati nel PDF (solo 5, già selezionati casualmente)
+    pdf.cell(200, 10, txt="Here are your top 5 recommendations:", ln=True)
     pdf.ln(10)
-    for result in results:
+    for result in recommendations:  # Usa le raccomandazioni mescolate
         result_cleaned = clean_text(result)
         pdf.multi_cell(0, 10, result_cleaned)
         pdf.ln(5)
@@ -58,7 +59,6 @@ def generate_pdf(results, preferred_day, start_time, end_time):
         messagebox.showinfo("PDF Generated", "The PDF has been successfully generated with your schedule.")
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred while generating the PDF: {e}")
-
 
 # Funzione per aggiornare il frame della durata in base al tipo di contenuto selezionato
 def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var):
@@ -164,13 +164,15 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     results = preferences_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres)
     
     if len(results) > 0:
-        # Passa la lista di raccomandazioni (massimo 5) alla funzione display_schedule
-        display_schedule(preferred_day, start_time, end_time, results[:5], root)
-        generate_pdf(results, preferred_day, start_time, end_time)
+        # Genera le raccomandazioni casuali una sola volta
+        random_recommendations = random.sample(results, min(5, len(results)))  # Seleziona fino a 5 raccomandazioni casuali
+
+        # Usa le stesse raccomandazioni sia per il calendario che per il PDF
+        display_schedule(preferred_day, start_time, end_time, random_recommendations, root)
+        generate_pdf(random_recommendations, preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
 
-# Funzione per visualizzare la pianificazione settimanale nel calendario con le date correnti
 def display_schedule(day, start_time, end_time, recommendations, root):
     # Crea una finestra secondaria per il calendario
     calendar_window = tk.Toplevel(root)
@@ -200,11 +202,10 @@ def display_schedule(day, start_time, end_time, recommendations, root):
     col_index = days_of_week.index(day)  # Trova l'indice del giorno selezionato
     time_label.grid(row=1, column=col_index, padx=5, pady=5)
 
-    # Mostra le raccomandazioni nel giorno selezionato (fino a 5)
-    for i, rec in enumerate(recommendations[:5]):  # Mostra solo le prime 5 raccomandazioni
+    # Mostra le raccomandazioni nel giorno selezionato (fino a 5, già selezionate casualmente)
+    for i, rec in enumerate(recommendations):  # Usa le stesse raccomandazioni
         recommendation_label = tk.Label(calendar_window, text=rec, bg="lightblue", font=("Arial", 8))
         recommendation_label.grid(row=i + 2, column=col_index, padx=5, pady=5)
-
 
 # Funzione per resettare i campi
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var):

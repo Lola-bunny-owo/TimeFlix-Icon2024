@@ -1,8 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 import eda 
 import preprocessing
-import interface 
+import apprNonSup
+import interface
 
 
 # Import del dataset
@@ -80,6 +82,32 @@ print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= [
 # One-Hot Encoding per la colonna 'type', Embedding WORD2VEC per la colonna 'listed_in'
 df= preprocessing.one_hot_enc(df) 
 preprocessing.w2v(df)
+
+#### PCA - Apprendimento Non Supervisionato ###
+
+# Conversione degli embeddings in array di float e standardizzazione degli array
+embeddings_array_film = apprNonSup.preprocess_embeddings(df, 'Genre_Embedding_Film')
+embeddings_array_show = apprNonSup.preprocess_embeddings(df, 'Genre_Embedding_Show')
+
+max_components= 30 # Numero di componenti iniziali
+# Applicazione della PCA e visualizzazione della varianza per film e serie TV per 30 componenti
+embeddings_film_pca, explained_variance_film = apprNonSup.apply_pca_and_plot(max_components, embeddings_array_film, "i film")
+embeddings_show_pca, explained_variance_show = apprNonSup.apply_pca_and_plot(max_components, embeddings_array_show, "le serie TV")
+
+# Calcola il numero di componenti necessarie per raggiungere la soglia del 95% di varianza
+threshold_comp = 0.95 
+components_needed_film = apprNonSup.calculate_components_needed(explained_variance_film, threshold_comp, "i film")
+components_needed_show = apprNonSup.calculate_components_needed(explained_variance_show, threshold_comp, "le serie TV")
+
+# Ricalcola il pca sul numero di componenti per film e per serie tv
+embeddings_film_pca, explained_variance_film = apprNonSup.apply_pca_and_plot(components_needed_film, embeddings_array_film, "i film")
+embeddings_show_pca, explained_variance_show = apprNonSup.apply_pca_and_plot(components_needed_show, embeddings_array_show, "le serie TV")
+
+# Aggiorna il DataFrame con gli embeddings PCA trasformati
+apprNonSup.update_embeddings_in_df(df, embeddings_film_pca, 'Genre_Embedding_Film')
+apprNonSup.update_embeddings_in_df(df, embeddings_show_pca, 'Genre_Embedding_Show')
+
+### FINE PCA ###
 
 # Eliminazione delle colonne seguenti: 'release_year', 'country', 'date_added', 'duration'. Renaming delle colonne
 columns_to_remove= ["release_year", "country", "date_added", "listed_in", "duration"]

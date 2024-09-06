@@ -246,5 +246,16 @@ print("Cond1", df[cond1])  # Condizione 1
 print("Cond2", df[cond2])  # Condizione 2
 print("Cond3", df[cond3])  # Condizione 3
 '''
+---------------
 
+funzione w2v.. parte degli embeddings medi, se serve cambiare il valore da None a 0.0 (valori nulli)
+ # Creazione degli embedding medi per film e serie TV - i valori nulli vengono sostituiti con 0.0
+    # df['Genre_Embedding_Film'] = df['Genre_Film'].apply(lambda x: np.nan_to_num(model.wv[x].mean(axis=0), nan=0.0) if x else np.zeros(100))
+    # df['Genre_Embedding_Show'] = df['Genre_Show'].apply(lambda x: np.nan_to_num(model.wv[x].mean(axis=0), nan=0.0) if x else np.zeros(100))
+    
+--------------
+main:
+
+PCA, stampa dei valori degli array di embeddings
+print("\nEmbeddings per i film convertiti: ", embeddings_array_film[:3]) 
     

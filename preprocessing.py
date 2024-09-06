@@ -12,7 +12,7 @@ def manage_outliers(df, outliers_df, column, manual_threshold):
     df_filtered = df[~df.index.isin(outliers_to_remove.index)].copy()
     
     # Informazioni sugli outliers rimossi
-    print(f"\nRimossi {len(outliers_to_remove)} outliers dalla colonna '{column}' con soglia manuale > {manual_threshold}.")
+    #print(f"\nRimossi {len(outliers_to_remove)} outliers dalla colonna '{column}' con soglia manuale > {manual_threshold}.")
     
     return df_filtered
 

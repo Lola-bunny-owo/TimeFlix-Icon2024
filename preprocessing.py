@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from gensim.models import Word2Vec
 
 #### Funzioni per la fase di preprocessing

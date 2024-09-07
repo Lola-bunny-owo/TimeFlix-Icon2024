@@ -117,6 +117,10 @@ def update_genre_list(content_type, genre_var, df):
     genre_var.delete(0, tk.END)
     for genre in genre_list:
         genre_var.insert(tk.END, genre)
+        
+    # Debug: gestisce il caso in cui non ci siano generi disponibili per il tipo di contenuto selezionato
+    if not genre_list:
+        messagebox.showerror("Errore", "Nessun genere disponibile per il tipo di contenuto selezionato.")
 
 # Funzione che mostra i suggerimenti basati sugli embeddings dei generi
 def show_recommendations(df, selected_title):
@@ -188,10 +192,17 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     start_time = start_time_var.get()
     end_time = end_time_var.get()
 
+    # Verifica se è stata effettuata una selezione dei generi valida
     if not selected_genres:
-        # Mostra un messaggio di errore se nessun genere è stato selezionato
-        messagebox.showerror("Errore", "Per favore, seleziona almeno un genere.")
-        return  # Interrompe l'esecuzione della funzione
+       if not selected_genres or not all(isinstance(genre, str) for genre in selected_genres):
+        messagebox.showerror("Errore", "Per favore, seleziona almeno un genere valido.")
+        print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output to trace the issue
+        return  # Stop execution if the genre selection is invalid
+    
+    # Prende i giorni preferiti e l'orario
+    preferred_day = day_var.get()
+    start_time = start_time_var.get()
+    end_time = end_time_var.get()
 
     preferences = {
         "content_type": content_type,

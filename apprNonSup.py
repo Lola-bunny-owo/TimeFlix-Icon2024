@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 
 # Funzione per la conversione degli Embeddings da lista di stringhe ad array di float
@@ -75,3 +76,24 @@ def update_embeddings_in_df(df, new_embeddings, column):
         df[column] = list(new_embeddings)  # Converti l'array di embeddings in una lista di array
     else:
         print(f"Errore: Il numero di embeddings ({len(new_embeddings)}) non corrisponde al numero di righe del DataFrame ({len(df)}).")
+        
+
+# Function to recommend content based on genre embeddings
+def recommend_based_on_embeddings(df, content_title, num_recommendations=3):
+    # Check if the title exists in the dataset
+    if content_title not in df['Title'].values:
+        raise ValueError(f"Content title '{content_title}' not found in the dataset.")
+
+    # Get the genre embedding for the selected content
+    selected_embedding = df[df['Title'] == content_title]['Genre_Embedding_Film'].values[0]
+    
+    # Compute cosine similarity between the selected embedding and all other embeddings
+    df['similarity'] = df['Genre_Embedding_Film'].apply(lambda x: cosine_similarity([selected_embedding], [x])[0][0])
+    
+    # Sort by similarity and exclude the selected content
+    recommendations_df = df[df['Title'] != content_title].sort_values('similarity', ascending=False)
+    
+    # Return the top N recommendations
+    recommendations = recommendations_df['Title'].head(num_recommendations).tolist()
+    
+    return recommendations

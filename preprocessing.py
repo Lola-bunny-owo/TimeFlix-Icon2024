@@ -117,8 +117,8 @@ def rename_feature(df):
         'rating': 'Classification',
         'duration_numeric_film': 'Film_Duration',
         'duration_numeric_shows': 'Show_Duration',
-        'type_Movie': 'Is_Movie',
-        'type_TV Show': 'Is_Show',
+        'type_Movie': 'Is_movie',
+        'type_TV Show': 'Is_TVshow',
         'duration_numeric': 'Duration_numeric',
     }
     

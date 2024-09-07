@@ -258,4 +258,45 @@ main:
 
 PCA, stampa dei valori degli array di embeddings
 print("\nEmbeddings per i film convertiti: ", embeddings_array_film[:3]) 
+
+------------------ Filtro che era nel file "interface.py", cambiato con il filtro che applica una tecnica di backtracking + forward checking.
+
+# Funzione che filtra i contenuti in base alle preferenze dell'utente
+def preferences_filter(df, Is_movie, Is_TVshow, min_duration, max_duration, selected_genres):
+    filtered_results = []
+
+    # Maschera booleana per i generi basata sul tipo di contenuto
+    if Is_movie:
+        genre_mask = df['Genre_Film'].apply(lambda x: any(genre in selected_genres for genre in x))
+        duration_mask = (df['Film_Duration'].fillna(0) >= min_duration) & (df['Film_Duration'].fillna(0) <= max_duration)
+        type_mask = df['Is_movie'] == 1
+    elif Is_TVshow:
+        genre_mask = df['Genre_Show'].apply(lambda x: any(genre in selected_genres for genre in x))
+        duration_mask = (df['Show_Duration'].fillna(0) >= min_duration) & (df['Show_Duration'].fillna(0) <= max_duration)
+        type_mask = df['Is_TVshow'] == 1
+    else:
+        return []
+
+    # Filtro finale
+    filtered_df = df[genre_mask & duration_mask & type_mask]
+
+    # Creazione della lista di risultati formattati
+    for _, item in filtered_df.iterrows():
+        if Is_movie:
+            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Film_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
+        elif Is_TVshow:
+            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Show_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
+
+    return filtered_results
+
+------------
+Vecchia funzione per l'estrazione dei titoli dai suggerimenti
+
+def extract_title_from_recommendation(recommendation):
+    # The expected format is "Movie/TV Show - Title - Duration/Seasons - Genres"
+    parts = recommendation.split(" - ")
     
+    # We expect the second part to be the title
+    if len(parts) > 1:
+        return parts[1].strip()  # Return the title and remove any extra spaces
+    return recommendation  # Fallback to the whole string if it doesn't match the format

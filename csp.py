@@ -1,31 +1,42 @@
 
-# Funzione che filtra i contenuti in base alle preferenze dell'utente
-# Le variabili sono: is_movie, is_show, min_duration, max_duration, selected_genres
-# I vincoli sono: il tipo di contenuto, la durata, i generi
-def cs_filter(df, is_movie, is_show, min_duration, max_duration, selected_genres):
-    filtered_results = []
+#### Funzioni per il CSP Applicato al sistema di raccomandazione e pianificazione ####
 
-    # Vincolo sul tipo di contenuto
-    if is_movie and not is_show:
-        genre_mask = df['Genre_Film'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Film_Duration'].fillna(0) >= min_duration) & (df['Film_Duration'].fillna(0) <= max_duration)
-        type_mask = df['Is_Movie'] == 1
-    elif is_show and not is_movie:
-        genre_mask = df['Genre_Show'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Show_Duration'].fillna(0) >= min_duration) & (df['Show_Duration'].fillna(0) <= max_duration)
-        type_mask = df['Is_TVShow'] == 1
-    else:
-        return []
+# Funzionche che verifica se il contenuto soddisfa i vincoli specificati
+def is_consistent(content, selected_genres, min_duration, max_duration, is_movie, is_show):
+    if is_movie and not content['Is_movie']:
+        return False
+    if is_show and not content['Is_TVshow']:
+        return False
 
-    # Applicazione dei vincoli e filtraggio dei dati
-    filtered_df = df[genre_mask & duration_mask & type_mask] # Se qui si aggiunge un .head(5), ad esempio il filtro contiene solo 5 contenuti
+    # Controllo dei generi
+    genres = content['Genre_Film'] if is_movie else content['Genre_Show']
+    if not any(genre in selected_genres for genre in genres):
+        return False
 
-    # Creazione della lista di risultati formattati
-    for _, item in filtered_df.iterrows():
-        if is_movie:
-            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Film_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
-        elif is_show:
-            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Show_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
+    # Controllo della durata
+    duration = content['Film_Duration'] if is_movie else content['Show_Duration']
+    if not (min_duration <= duration <= max_duration):
+        return False
 
-    return filtered_results
+    return True
+
+# Funzione che implementa il forward checking per ridurre il numero di opzioni da esplorare.
+# Termina se ha trovato un numero sufficiente di soluzioni.
+def forward_checking(df, index, selected_genres, min_duration, max_duration, is_movie, is_show, partial_solution, max_solutions=50):
+    # Condizione di terminazione: Se l'indice supera la lunghezza del DataFrame o se abbiamo abbastanza soluzioni.
+    if index >= len(df) or len(partial_solution) >= max_solutions:
+        return partial_solution
+
+    content = df.iloc[index]  # Si ottiene il contenuto corrente dal df
+
+    # Verifica se il contenuto soddisfa i vincoli. Se il contenuto è valido, lo aggiunge alla soluzione parziale
+    if is_consistent(content, selected_genres, min_duration, max_duration, is_movie, is_show):
+        partial_solution.append(content.to_dict())
+
+    # Si prosegue con l'elemento successivo
+    return forward_checking(df, index + 1, selected_genres, min_duration, max_duration, is_movie, is_show, partial_solution, max_solutions)
+
+# Funzione che applica il backtracking con forward checking per trovare soluzioni coerenti con i vincoli
+def apply_backtracking(df, is_movie, is_show, min_duration, max_duration, selected_genres):
+    return forward_checking(df, 0, selected_genres, min_duration, max_duration, is_movie, is_show, [])
 

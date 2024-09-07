@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -29,11 +28,11 @@ def standardize_values(embedding_array):
 def preprocess_embeddings(df, embedding_column):
      # Conversione degli embeddings in array di float
     embeddings_array = convert_embeddings(df, embedding_column)
-    print(f"\nEmbeddings convertiti per {embedding_column}: ", embeddings_array[:3])
+    print(f"\nEmbeddings convertiti per {embedding_column}: ", embeddings_array[:1])
 
     # Standardizzazione degli embeddings
     embeddings_array = standardize_values(embeddings_array)
-    print(f"\nEmbeddings standardizzati per {embedding_column}: ", embeddings_array[:3])
+    print(f"\nEmbeddings standardizzati per {embedding_column}: ", embeddings_array[:1])
 
     return embeddings_array
     
@@ -61,7 +60,7 @@ def apply_pca_and_plot(n_components, embeddings, title):
     # Applicazione della PCA
     embeddings_pca, explained_variance = pca(n_components, embeddings)
     print(f"\nGrafico della varianza spiegata cumulativa per {title} con {n_components} componenti: ")
-    plot_explained_variance(explained_variance, title)
+    ## plot_explained_variance(explained_variance, title)
     return embeddings_pca, explained_variance
 
 def calculate_components_needed(explained_variance, threshold_comp, title):

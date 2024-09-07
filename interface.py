@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 from fpdf import FPDF
 import json  # Importa il modulo JSON per salvare le preferenze
 import random
+from csp import apply_backtracking
 from apprNonSup import recommend_based_on_embeddings
+global root
 
 # Funzione per salvare le preferenze in un file JSON
 def save_preferences(preferences):
@@ -32,7 +34,7 @@ def generate_calendar(results, root):
 def clean_text(text):
     return text.encode('ascii', 'ignore').decode('ascii')
 
-
+# Funzione che genera un PDF con i suggerimenti per l'utente in base alle sue preferenze
 def generate_pdf(recommendations, additional_recommendations, preferred_day, start_time, end_time):
     pdf = FPDF()
     pdf.add_page()
@@ -75,8 +77,6 @@ def generate_pdf(recommendations, additional_recommendations, preferred_day, sta
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred while generating the PDF: {e}")
 
-
-
 # Funzione per aggiornare il frame della durata in base al tipo di contenuto selezionato
 def update_duration_frame(content_type, duration_frame, min_duration_var, max_duration_var):
     # Rimuove tutti i widget esistenti nel frame della durata
@@ -117,84 +117,81 @@ def update_genre_list(content_type, genre_var, df):
     genre_var.delete(0, tk.END)
     for genre in genre_list:
         genre_var.insert(tk.END, genre)
-        
+
+# Funzione che mostra i suggerimenti basati sugli embeddings dei generi
 def show_recommendations(df, selected_title):
-    # Get the recommendations
+    # Prende i suggerimenti basati sugli embeddings dei generi
     recommendations = recommend_based_on_embeddings(df, selected_title)
 
-    # Display the recommendations in the UI
+    # Mostra i suggerimenti nell'UI
     recommendation_frame = tk.LabelFrame(root, text="Recommended Content")
     recommendation_frame.pack(fill="x", padx=5, pady=5)
 
     for rec in recommendations:
         tk.Label(recommendation_frame, text=rec).pack()
 
-# Funzione che filtra i contenuti in base alle preferenze dell'utente
-def preferences_filter(df, Is_movie, Is_TVshow, min_duration, max_duration, selected_genres):
-    filtered_results = []
-
-    # Maschera booleana per i generi basata sul tipo di contenuto
-    if Is_movie:
-        genre_mask = df['Genre_Film'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Film_Duration'].fillna(0) >= min_duration) & (df['Film_Duration'].fillna(0) <= max_duration)
-        type_mask = df['Is_movie'] == 1
-    elif Is_TVshow:
-        genre_mask = df['Genre_Show'].apply(lambda x: any(genre in selected_genres for genre in x))
-        duration_mask = (df['Show_Duration'].fillna(0) >= min_duration) & (df['Show_Duration'].fillna(0) <= max_duration)
-        type_mask = df['Is_TVshow'] == 1
-    else:
-        return []
-
-    # Filtro finale
-    filtered_df = df[genre_mask & duration_mask & type_mask] # Se qui si aggiunge un .head(5), ad esempio il filtro contiene solo 5 contenuti
-
-    # Creazione della lista di risultati formattati
-    for _, item in filtered_df.iterrows():
-        if Is_movie:
-            filtered_results.append(f"Movie - {item['Title']} - Duration: {item.get('Film_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Film', []))}")
-        elif Is_TVshow:
-            filtered_results.append(f"TV Show - {item['Title']} - Seasons: {item.get('Show_Duration', 'N/A')} - Genres: {', '.join(item.get('Genre_Show', []))}")
-
-    return filtered_results
-
+# Funzione che estrae e formatta le info su film o serie tv.
 def extract_title_duration_genres(recommendation):
-    # The expected format is "Movie/TV Show - Title - Duration/Seasons - Genres"
-    parts = recommendation.split(" - ")
     
-    if len(parts) >= 4:
-        title = parts[1].strip()
-        duration_or_seasons = parts[2].strip()
-        genres = parts[3].replace("Genres: ", "").strip()  # Clean up "Genres: " prefix
-        return f"{title}: {duration_or_seasons}\nGenres: {genres}"
-    return recommendation  # Fallback in case the format doesn't match
+    # Gestisce il caso in cui recommendation sia un dizionario
+    if isinstance(recommendation, dict):
+        title = recommendation.get('Title', 'Unknown Title')
+        if recommendation.get('Is_movie'):
+            duration = recommendation.get('Film_Duration', 'N/A')
+            genres = ', '.join(recommendation.get('Genre_Film', []))
+            return f"{title}: {duration}\nGenres: {genres}"
+        elif recommendation.get('Is_TVshow'):
+            duration = recommendation.get('Show_Duration', 'N/A')
+            genres = ', '.join(recommendation.get('Genre_Show', []))
+            return f"{title}: Seasons: {duration}\nGenres: {genres}"
+        else:
+            return f"{title}: Unknown Content"
 
+    # Gestisce il caso in cui recommendation sia una stringa (formato vecchio nel caso ci serva)
+    elif isinstance(recommendation, str):
+        parts = recommendation.split(" - ")
+        if len(parts) >= 4:
+            title = parts[1].strip()
+            duration_or_seasons = parts[2].strip()
+            genres = parts[3].replace("Genres: ", "").strip()  # Pulisce il prefisso "Genres: "
+            return f"{title}: {duration_or_seasons}\nGenres: {genres}"
 
+    # Ritorna il contenuto originale se non corrisponde a nessun formato conosciuto
+    return str(recommendation)  # Converte qualsiasi altro tipo in stringa
+
+# Funzione che estrae il titolo di un contenuto suggerito.
 def extract_title_from_recommendation(recommendation):
-    # The expected format is "Movie/TV Show - Title - Duration/Seasons - Genres"
-    parts = recommendation.split(" - ")
-    
-    # We expect the second part to be the title
-    if len(parts) > 1:
-        return parts[1].strip()  # Return the title and remove any extra spaces
-    return recommendation  # Fallback to the whole string if it doesn't match the format
+   
+    # Verifica che recommendation sia un dizionario e contiene una chiave 'Title'
+    if isinstance(recommendation, dict):
+        return recommendation.get('Title', 'Unknown Title')
+    else:
+        # Se recommendation è una stringa, esegue lo split come previsto
+        parts = recommendation.split(" - ")
+        return parts[1] if len(parts) > 1 else "Unknown Title"    
 
-
+# Funzione che gestisce le preferenze dell'utente e richiama tutte le altre funzioni utili a tale scopo.
 def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root):
     content_type = content_type_var.get()
     Is_movie = content_type == "Movie"
     Is_TVshow = content_type == "TV Show"
     
-    # Get the duration values
+    # Prende i valori di durata
     min_duration = min_duration_var.get()
     max_duration = max_duration_var.get()
 
-    # Get the selected genres
+    # Prende il genere selezionato
     selected_genres = [genre_var.get(i) for i in genre_var.curselection()]
 
-    # Get preferred day and time
+    # Prende i giorni preferiti e l'orario
     preferred_day = day_var.get()
     start_time = start_time_var.get()
     end_time = end_time_var.get()
+
+    if not selected_genres:
+        # Mostra un messaggio di errore se nessun genere è stato selezionato
+        messagebox.showerror("Errore", "Per favore, seleziona almeno un genere.")
+        return  # Interrompe l'esecuzione della funzione
 
     preferences = {
         "content_type": content_type,
@@ -206,90 +203,80 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         "end_time": end_time
     }
 
-    save_preferences(preferences)  # Save preferences to a file
+    save_preferences(preferences)  # Salva le preferenze in formato JSON
     
-    # Filter results based on user preferences
-    results = preferences_filter(df, Is_movie, Is_TVshow, min_duration, max_duration, selected_genres)
+    # Filtra i risultati applicando la tecnica di backtracking, basandosi sulle preferenze dell'utente
+    results = apply_backtracking(df, Is_movie, Is_TVshow, min_duration, max_duration, selected_genres)
     
     if len(results) > 0:
-        # Generate 5 random recommendations
+        # Genera 5 suggerimenti random
         random_recommendations = random.sample(results, min(5, len(results)))
 
-        # Automatically select one recommendation from the 5 (randomly)
+        # Seleziona automaticamente un suggerimento tra i 5 dati come output (random)
         selected_item = random.choice(random_recommendations)
         
-        # Extract the actual title from the selected item
-        selected_title = extract_title_from_recommendation(selected_item)
+        # Converte il dizionario in una stringa formattata
+        formatted_item = format_recommendation(selected_item)
         
-        # Generate 3 additional recommendations based on the selected title
+        # Estrae il titolo dall'item selezionato
+        selected_title = extract_title_from_recommendation(formatted_item)
+        
+        # Genera 3 suggerimenti aggiuntivi basandosi sul titolo selezionato
         additional_recommendations = recommend_based_on_embeddings(df, selected_title)
 
-        # Show the calendar with both the initial 5 and additional 3 recommendations
+        # Mostra il calendario con i 5 suggerimenti iniziali ed i 3 suggerimenti aggiuntivi
         display_schedule(preferred_day, start_time, end_time, random_recommendations, root, additional_recommendations)
         
-        # Generate the PDF with the separation between the 5 initial and 3 additional recommendations
+        # Genera il PDF separando i 5 suggerimenti iniziali ed i 3 aggiuntivi
         generate_pdf(random_recommendations, additional_recommendations, preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
 
+# Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
+def format_recommendation(content):
+    if content['Is_movie']:
+        return f"Movie - {content['Title']} - Duration: {content.get('Film_Duration', 'N/A')} - Genres: {', '.join(content.get('Genre_Film', []))}"
+    elif content['Is_TVshow']:
+        return f"TV Show - {content['Title']} - Seasons: {content.get('Show_Duration', 'N/A')} - Genres: {', '.join(content.get('Genre_Show', []))}"
+    return "Unknown Content"
 
-        
-def select_one_recommendation(recommendations, root):
-    top = tk.Toplevel(root)
-    top.title("Select a Recommendation")
-
-    selected_item_var = tk.StringVar()
-
-    tk.Label(top, text="Select one of the following recommendations:").pack(padx=10, pady=10)
-    title_menu = ttk.Combobox(top, textvariable=selected_item_var, values=recommendations, state="readonly")
-    title_menu.pack(padx=5, pady=5)
-    title_menu.current(0)
-
-    def on_select():
-        top.destroy()
-
-    ttk.Button(top, text="Select", command=on_select).pack(pady=10)
-
-    top.wait_window()  # Wait until the user selects an item
-    return selected_item_var.get()  # Return the selected item
-
-
+# Mostra la weekly schedule
 def display_schedule(day, start_time, end_time, recommendations, root, additional_recommendations=None):
-    # Create a new window for the calendar
+    # Crea una nuova finestra per il calendario
     calendar_window = tk.Toplevel(root)
     calendar_window.title("Weekly Schedule")
 
-    # Days of the week
+    # Giorni della settimana
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-    # Find the current day and start of the week
+    # Trova il giorno corrente e l'inizio della settimana
     today = datetime.now()
-    start_of_week = today - timedelta(days=today.weekday())  # The start of the current week (Monday)
+    start_of_week = today - timedelta(days=today.weekday())  # L'inizio della settimana corrente (Monday)
 
-    # Display the week and the calendar
+    # Mostra la settimana ed il calendario
     for i, day_name in enumerate(days_of_week):
         current_day = start_of_week + timedelta(days=i)
         date_str = current_day.strftime("%d %b %Y")
 
-        # Display each day of the week and the date
+        # Mostra ogni giorno della settimana e la data
         label = tk.Label(calendar_window, text=f"{day_name} - {date_str}", font=("Arial", 10, "bold"))
         label.grid(row=0, column=i, padx=2, pady=2)
 
-    # Display the preferred time slot on the selected day
+    # Mostra lo slot di tempo preferito nel giorno selezionato
     time_label = tk.Label(calendar_window, text=f"{start_time} - {end_time}", bg="lightgreen", font=("Arial", 10))
     col_index = days_of_week.index(day)
     time_label.grid(row=1, column=col_index, padx=2, pady=2)
 
-    # Show the 5 initial recommendations
+    # Mostra i 5 suggerimenti iniziali
     tk.Label(calendar_window, text="Initial 5 Recommendations", font=("Arial", 9, "bold")).grid(row=2, column=col_index, padx=2, pady=2)
 
-    # Show title, duration, and genres for each recommendation
+    # Mostra il titolo, la durata, ed i generi per ogni suggerimento
     for i, rec in enumerate(recommendations):
         title_duration_genres = extract_title_duration_genres(rec)
         recommendation_label = tk.Label(calendar_window, text=title_duration_genres, bg="lightblue", font=("Arial", 8), justify='left')
         recommendation_label.grid(row=i + 3, column=col_index, padx=2, pady=2)
 
-    # Separator between the 5 and the additional 3 recommendations
+    # Crea una separazione tra i 5 suggerimenti ed i 3 aggiuntivi
     if additional_recommendations:
         separator = tk.Label(calendar_window, text="You might also like...", font=("Arial", 9, "bold"))
         separator.grid(row=i + 4, column=col_index, padx=2, pady=5)
@@ -300,41 +287,7 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
             recommendation_label.grid(row=i + j + 5, column=col_index, padx=2, pady=2)
 
     return calendar_window
-
-
-# Funzione per resettare i campi
-def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var):
-    content_type_var.set("Movie")
-    min_duration_var.set(0)
-    max_duration_var.set(200)
-    genre_var.selection_clear(0, tk.END)
     
-    
-def create_ui(df):
-    # Initialize the root window
-    global root
-    root = tk.Tk()
-    root.title("Content Recommender")
-
-    # Existing UI elements for content type, duration, and genres selection
-
-    # Frame for selecting a content title for recommendations
-    title_frame = tk.LabelFrame(root, text="Select a Title for Recommendations")
-    title_frame.pack(fill="x", padx=5, pady=5)
-
-    selected_title_var = tk.StringVar()
-    titles = df['title'].tolist()  # List of all content titles
-    title_menu = ttk.Combobox(title_frame, textvariable=selected_title_var, values=titles, state="readonly")
-    title_menu.pack(padx=5, pady=5)
-    title_menu.current(0)
-
-    # Button to show recommendations based on the selected title
-    recommendation_button = tk.Button(root, text="Show Recommendations", command=lambda: show_recommendations(df, selected_title_var.get()))
-    recommendation_button.pack(pady=10)
-
-    root.mainloop()
-
-
 # Funzione per creare e avviare l'interfaccia grafica
 def create_interface(df):
     root = tk.Tk()
@@ -414,7 +367,7 @@ def create_interface(df):
     # Avvio dell'interfaccia grafica
     root.mainloop()
     
-    # Funzione per resettare i campi
+# Funzione per resettare i campi
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
     content_type_var.set("Movie")
     min_duration_var.set(0)

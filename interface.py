@@ -343,50 +343,168 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
     # Crea una nuova finestra per il calendario
     calendar_window = tk.Toplevel(root)
     calendar_window.title("Weekly Schedule")
-
+    calendar_window.configure(bg="#f7f7f7")
+    
     # Giorni della settimana
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
+    
     # Trova il giorno corrente e l'inizio della settimana
     today = datetime.now()
     start_of_week = today - timedelta(days=today.weekday())  # L'inizio della settimana corrente (Monday)
+    
+    # Configura il layout della griglia per espandersi
+    for i, day_name in enumerate(days_of_week):
+        calendar_window.columnconfigure(i, weight=1)  # Altre colonne
+    
+    # Header dei giorni della settimana
+    header_frame = tk.Frame(calendar_window, bg="#333333")
+    header_frame.grid(row=0, column=0, columnspan=7, sticky="ew")
 
     # Mostra la settimana ed il calendario
     for i, day_name in enumerate(days_of_week):
         current_day = start_of_week + timedelta(days=i)
         date_str = current_day.strftime("%d %b %Y")
-
-        # Mostra ogni giorno della settimana e la data
-        label = tk.Label(calendar_window, text=f"{day_name} - {date_str}", font=("Arial", 10, "bold"))
-        label.grid(row=0, column=i, padx=2, pady=2)
-
+    
+        # Crea e configura le label dei giorni della settimana
+        label = tk.Label(
+            header_frame,
+            text=f"{day_name}\n{date_str}",
+            font=("Arial", 10, "bold"),
+            bg="#3b3b3b" if day_name != day else "#3f83e0",  # Cambia colore se è il giorno selezionato
+            fg="white",
+            padx=10,
+            pady=5,
+            borderwidth=1,
+            relief="ridge",
+            wraplength=150
+        )
+        label.grid(row=0, column=i, padx=2, pady=2, sticky="nsew")
+        
     # Mostra lo slot di tempo preferito nel giorno selezionato
-    time_label = tk.Label(calendar_window, text=f"{start_time} - {end_time}", bg="lightgreen", font=("Arial", 10))
-    col_index = days_of_week.index(day)
-    time_label.grid(row=1, column=col_index, padx=2, pady=2)
+    time_label = tk.Label(
+        calendar_window,
+        text=f"{start_time} - {end_time}",
+        bg="#d4edda",
+        fg="#155724",
+        font=("Arial", 10, "bold"),
+        padx=5,
+        pady=2,
+        borderwidth=1,
+        relief="groove"
+    )
+    time_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
     # Mostra i 5 suggerimenti iniziali
-    tk.Label(calendar_window, text="Initial 5 Recommendations", font=("Arial", 9, "bold")).grid(row=2, column=col_index, padx=2, pady=2)
+    initial_label = tk.Label(
+        calendar_window,
+        text="Initial 5 Recommendations",
+        font=("Arial", 10, "bold"),
+        fg="#333333",
+        bg="#f7f7f7",
+        pady=5
+    )
+    initial_label.grid(row=2, column=0, padx=2, pady=2, sticky="nsew")
 
     # Mostra il titolo, la durata, ed i generi per ogni suggerimento
     for i, rec in enumerate(recommendations):
         title_duration_genres = extract_title_duration_genres(rec)
-        recommendation_label = tk.Label(calendar_window, text=title_duration_genres, bg="lightblue", font=("Arial", 8), justify='left')
-        recommendation_label.grid(row=i + 3, column=col_index, padx=2, pady=2)
+        recommendation_frame = tk.Frame(
+            calendar_window,
+            bg="#d0e1f9",
+            padx=5,
+            pady=5,
+            relief="solid",
+            borderwidth=1
+        )
+        recommendation_frame.grid(row=i + 3, column=0, padx=2, pady=2, sticky="nsew")
+        recommendation_label = tk.Label(
+            recommendation_frame,
+            text=title_duration_genres,
+            bg="#d0e1f9",
+            font=("Arial", 9),
+            justify='center',
+            wraplength=400
+        )
+        recommendation_label.pack(anchor='center', fill='x')  # Centra l'etichetta all'interno del frame
 
     # Crea una separazione tra i 5 suggerimenti ed i 3 aggiuntivi
     if additional_recommendations:
-        separator = tk.Label(calendar_window, text="You might also like...", font=("Arial", 9, "bold"))
-        separator.grid(row=i + 4, column=col_index, padx=2, pady=5)
+        separator = tk.Label(
+            calendar_window,
+            text="You might also like...",
+            font=("Arial", 10, "bold"),
+            fg="#333333",
+            bg="#f7f7f7",
+            pady=5
+        )
+        separator.grid(row=i + 4, column=0, padx=2, pady=5, sticky="nsew")
 
         for j, rec in enumerate(additional_recommendations):
             # Apply the formatting function here
             title_duration_genres = extract_title_duration_genres(rec)
-            recommendation_label = tk.Label(calendar_window, text=title_duration_genres, bg="lightyellow", font=("Arial", 8))
-            recommendation_label.grid(row=i + j + 5, column=col_index, padx=2, pady=2)
+            additional_frame = tk.Frame(
+                calendar_window,
+                bg="#fff3cd",
+                padx=5,
+                pady=5,
+                relief="solid",
+                borderwidth=1
+            )
+            additional_frame.grid(row=i + j + 5, column=0, padx=2, pady=2, sticky="nsew")
+            recommendation_label = tk.Label(
+                additional_frame,
+                text=title_duration_genres,
+                bg="#fff3cd",
+                font=("Arial", 9),
+                justify='left',
+                wraplength=400
+            )
+            recommendation_label.pack(anchor='w', fill='x')
 
     return calendar_window
-    
+
+# Funzione per il controllo del formato dell'ora inserito dall'utente
+def validate_time_format(value):
+    if value == "":
+        return True  # Permetti di lasciare il campo vuoto (per reset)
+    if len(value) != 5:
+        return False
+    if value[2] != ":":
+        return False
+    hours, minutes = value.split(":")
+    if not (hours.isdigit() and minutes.isdigit()):
+        return False
+    if not (0 <= int(hours) < 24 and 0 <= int(minutes) < 60):
+        return False
+    return True
+
+# Funzione che valida ..
+def on_validate(P):
+    if P == "":
+        return True  # Permetti i campi vuoti per il reset senza mostrare errori
+    if validate_time_format(P):
+        return True
+    else:
+        messagebox.showerror("Invalid Time", "Please enter a valid time in the format HH:MM (00:00 - 23:59).")
+        return False
+
+# Funzione che crea il frame del time
+def create_time_frame(root):
+    time_frame = tk.LabelFrame(root, text="Preferred Time Interval")
+    time_frame.pack(fill="x", padx=5, pady=5)
+
+    global start_time_var, end_time_var
+    start_time_var= tk.StringVar(value="00:00")
+    end_time_var = tk.StringVar(value="00:00")
+
+    vcmd = (root.register(on_validate), '%P')
+
+    tk.Label(time_frame, text="Start Time").pack(side="left", padx=5)
+    tk.Entry(time_frame, textvariable=start_time_var, width=5, validate="focusout", validatecommand=vcmd).pack(side="left", padx=5)
+    tk.Label(time_frame, text="End Time").pack(side="left", padx=5)
+    tk.Entry(time_frame, textvariable=end_time_var, width=5, validate="focusout", validatecommand=vcmd).pack(side="left", padx=5)
+
+   
 # Funzione per creare e avviare l'interfaccia grafica
 def create_interface(df):
     global day_dropdown
@@ -445,7 +563,7 @@ def create_interface(df):
     # Chiama la funzione per aggiornare la selezione dei giorni
     update_day_selection(day_var, days_list)
 
-    # Frame per la selezione dell'intervallo di tempo
+    '''# Frame per la selezione dell'intervallo di tempo
     time_frame = tk.LabelFrame(root, text="Preferred Time Interval")
     time_frame.pack(fill="x", padx=5, pady=5)
 
@@ -456,7 +574,9 @@ def create_interface(df):
     tk.Label(time_frame, text="Start Time").pack(side="left", padx=5)
     tk.Entry(time_frame, textvariable=start_time_var, width=5).pack(side="left", padx=5)
     tk.Label(time_frame, text="End Time").pack(side="left", padx=5)
-    tk.Entry(time_frame, textvariable=end_time_var, width=5).pack(side="left", padx=5)
+    tk.Entry(time_frame, textvariable=end_time_var, width=5).pack(side="left", padx=5)'''
+    
+    create_time_frame(root)
 
     # Frame per i pulsanti
     button_frame = tk.Frame(root)

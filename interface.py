@@ -183,14 +183,13 @@ def extract_title_duration_genres(recommendation):
 
 # Funzione che estrae il titolo di un contenuto suggerito.
 def extract_title_from_recommendation(recommendation):
-   
-    # Verifica che recommendation sia un dizionario e contiene una chiave 'Title'
-    if isinstance(recommendation, dict):
-        return recommendation.get('Title', 'Unknown Title')
+    # Check if recommendation is a valid dictionary with a 'Title' key
+    if isinstance(recommendation, dict) and 'Title' in recommendation:
+        return recommendation['Title']
     else:
-        # Se recommendation è una stringa, esegue lo split come previsto
-        parts = recommendation.split(" - ")
-        return parts[1] if len(parts) > 1 else "Unknown Title"    
+        print(f"Error: The recommendation format is invalid: {recommendation}")
+        return "Unknown Title"
+  
 
 # Funzione che gestisce le preferenze dell'utente e richiama tutte le altre funzioni utili a tale scopo.
 def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root):
@@ -208,9 +207,9 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     # Verifica se è stata effettuata una selezione dei generi valida
     if not selected_genres:
        if not selected_genres or not all(isinstance(genre, str) for genre in selected_genres):
-        messagebox.showerror("Error", "Please, select at least one valid genre.")
-        print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output per tracciare l'errore
-        return  # Ferma l'esecuzione se il genere non è valido
+            messagebox.showerror("Error", "Please, select at least one valid genre.")
+            print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output per tracciare l'errore
+            return  # Ferma l'esecuzione se il genere non è valido
     
     # Prende i giorni preferiti e l'orario
     preferred_day = day_var.get()
@@ -238,23 +237,36 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
 
         # Seleziona automaticamente un suggerimento tra i 5 dati come output (random)
         selected_item = random.choice(random_recommendations)
-        
+
         # Converte il dizionario in una stringa formattata
         formatted_item = format_recommendation(selected_item)
-        
-        # Estrae il titolo dall'item selezionato
-        selected_title = extract_title_from_recommendation(formatted_item)
-        
+
+        # Estrai il titolo dall'item selezionato
+        selected_title = extract_title_from_recommendation(selected_item)
+
+        # Check if the title extraction is correct
+        if selected_title == "Unknown Title":
+            messagebox.showerror("Error", "The selected recommendation has no valid title.")
+            return  # Stop the execution if the title is not valid
+
         # Genera 3 suggerimenti aggiuntivi basandosi sul titolo selezionato
-        additional_recommendations = recommend_based_on_embeddings(df, selected_title)
+        try:
+            additional_recommendations = recommend_based_on_embeddings(df, selected_title)[:3]  # Limit to 3
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))  # Show an error message if the title is not found
+            return  # Stop further execution if the title is not found
+
+        # Format additional recommendations properly before passing to the display function
+        additional_recommendations = [format_recommendation(rec) for rec in additional_recommendations]
 
         # Mostra il calendario con i 5 suggerimenti iniziali ed i 3 suggerimenti aggiuntivi
         display_schedule(preferred_day, start_time, end_time, random_recommendations, root, additional_recommendations)
         
         # Genera il PDF separando i 5 suggerimenti iniziali ed i 3 aggiuntivi
-        generate_pdf(random_recommendations, additional_recommendations, preferred_day, start_time, end_time)
+        generate_pdf(random_recommendations, additional_recommendations[:3], preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
+
 
 # Funzione per resettare i campi
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
@@ -270,11 +282,23 @@ def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var
 
 # Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
 def format_recommendation(content):
-    if content['Is_movie']:
-        return f"Movie - {content['Title']} - Duration: {content.get('Film_Duration', 'N/A')} - Genres: {', '.join(content.get('Genre_Film', []))}"
-    elif content['Is_TVshow']:
-        return f"TV Show - {content['Title']} - Seasons: {content.get('Show_Duration', 'N/A')} - Genres: {', '.join(content.get('Genre_Show', []))}"
-    return "Unknown Content"
+    # Controlla se content è un dizionario valido con una chiave 'Title'
+    if isinstance(content, dict):
+        title = content.get('Title', 'Unknown Title')
+        if content.get('Is_movie'):
+            duration = content.get('Film_Duration', 'N/A')
+            genres = ', '.join(content.get('Genre_Film', []))
+            return f"{title}: {duration}\nGenres: {genres}"
+        elif content.get('Is_TVshow'):
+            duration = content.get('Show_Duration', 'N/A')
+            genres = ', '.join(content.get('Genre_Show', []))
+            return f"{title}: Seasons: {duration}\nGenres: {genres}"
+        else:
+            return "Invalid Content Format: Missing 'Is_movie' or 'Is_TVshow'"
+    else:
+        return "Invalid Content Format: Not a dictionary"
+
+
 
 # Mostra la weekly schedule
 def display_schedule(day, start_time, end_time, recommendations, root, additional_recommendations=None):
@@ -318,6 +342,7 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
         separator.grid(row=i + 4, column=col_index, padx=2, pady=5)
 
         for j, rec in enumerate(additional_recommendations):
+            # Apply the formatting function here
             title_duration_genres = extract_title_duration_genres(rec)
             recommendation_label = tk.Label(calendar_window, text=title_duration_genres, bg="lightyellow", font=("Arial", 8))
             recommendation_label.grid(row=i + j + 5, column=col_index, padx=2, pady=2)

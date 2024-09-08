@@ -151,10 +151,9 @@ preferred_content = appSup.predict_user_preference(df, clf)
 if not preferred_content.empty:
     # Salva solo i primi 20 contenuti preferiti in un file UTF-8 per evitare problemi di codifica nel terminale
     with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
-        f.write(preferred_content[['Title', 'Genre_Film', 'Film_Duration']].head(30).to_string())
-    print("Preferred content saved to 'preferred_content_output.txt'.")
+        f.write(preferred_content[['Title', 'Genre_Film', 'Film_Duration']].head(20).to_string())
 else:
-    print("No preferred content was predicted by the Decision Tree.")
+    print("Result was predicted by the Decision Tree.")
 
 
 

@@ -19,13 +19,3 @@
 572                                Hampstead                          [Comedies, Dramas, International Movies]          103.0
 580              Mobile Suit Gundam Hathaway        [Action & Adventure, Anime Features, International Movies]           96.0
 589                                 Red Joan                                    [Dramas, International Movies]          101.0
-619                                 Deranged                                    [Dramas, International Movies]           98.0
-634                               Wonder Boy                             [Documentaries, International Movies]           83.0
-635                      Here Comes the Rain                                    [Dramas, International Movies]          101.0
-645                      Murder by the Coast                             [Documentaries, International Movies]           89.0
-654                                  #Selfie                          [Comedies, Dramas, International Movies]          125.0
-698                                 Fan Girl                [Dramas, Independent Movies, International Movies]          101.0
-704                   A Man For The Week End                          [Comedies, Dramas, International Movies]           95.0
-750                            Tragic Jungle                [Dramas, Independent Movies, International Movies]           97.0
-764             Trippin' with the Kandasamys                 [Comedies, International Movies, Romantic Movies]           94.0
-770                Myriam Fares: The Journey           [Documentaries, International Movies, Music & Musicals]           72.0

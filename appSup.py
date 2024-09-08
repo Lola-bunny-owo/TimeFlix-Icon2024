@@ -40,8 +40,6 @@ def predict_user_preference(df, clf):
         with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
             f.write(preferred_content[['Title', 'user_preference']].to_string())
         print("Preferred content saved to 'preferred_content_output.txt'.")
-    else:
-        print("No preferred content was predicted by the Decision Tree.")
     
     return preferred_content
 

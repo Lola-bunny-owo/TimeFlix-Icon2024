@@ -122,6 +122,24 @@ def update_genre_list(content_type, genre_var, df):
     if not genre_list:
         messagebox.showerror("Error", "No genre available for the selected content type.")
 
+# Funzione che aggiorna dinamicamente il menù a discesa, che gestisce la selezione corrente
+def update_day_selection(day_var, days_list):
+    
+    selected_day = day_var.get()
+    
+    # Clear the existing options
+    day_dropdown['menu'].delete(0, 'end')
+    
+    # Add the new options
+    for day in days_list:
+        day_dropdown['menu'].add_command(label=day, command=tk._setit(day_var, day))
+
+    # Set the default value (if necessary)
+    if selected_day in days_list:
+        day_var.set(selected_day)
+    else:
+        day_var.set(days_list[0])
+
 # Funzione che mostra i suggerimenti basati sugli embeddings dei generi
 def show_recommendations(df, selected_title):
     # Prende i suggerimenti basati sugli embeddings dei generi
@@ -183,27 +201,22 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     # Prende i valori di durata
     min_duration = min_duration_var.get()
     max_duration = max_duration_var.get()
-
+    
     # Prende il genere selezionato
     selected_genres = [genre_var.get(i) for i in genre_var.curselection()]
-
-    # Prende i giorni preferiti e l'orario
-    preferred_day = day_var.get()
-    start_time = start_time_var.get()
-    end_time = end_time_var.get()
 
     # Verifica se è stata effettuata una selezione dei generi valida
     if not selected_genres:
        if not selected_genres or not all(isinstance(genre, str) for genre in selected_genres):
         messagebox.showerror("Error", "Please, select at least one valid genre.")
-        print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output to trace the issue
-        return  # Stop execution if the genre selection is invalid
+        print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output per tracciare l'errore
+        return  # Ferma l'esecuzione se il genere non è valido
     
     # Prende i giorni preferiti e l'orario
     preferred_day = day_var.get()
     start_time = start_time_var.get()
     end_time = end_time_var.get()
-
+    
     preferences = {
         "content_type": content_type,
         "min_duration": min_duration,
@@ -242,6 +255,18 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         generate_pdf(random_recommendations, additional_recommendations, preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
+
+# Funzione per resettare i campi
+def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
+    content_type_var.set("Movie")
+    min_duration_var.set(0)
+    max_duration_var.set(200)
+    genre_var.selection_clear(0, tk.END)
+        
+    # Reset dei campi relativi al giorno e all'orario
+    day_var.set("Monday")
+    start_time_var.set("00:00")
+    end_time_var.set("00:00")
 
 # Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
 def format_recommendation(content):
@@ -301,6 +326,7 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
     
 # Funzione per creare e avviare l'interfaccia grafica
 def create_interface(df):
+    global day_dropdown
     root = tk.Tk()
     root.title("Netflix Recommendation System")
 
@@ -345,13 +371,16 @@ def create_interface(df):
     # Frame per la selezione del giorno della settimana
     day_frame = tk.LabelFrame(root, text="Preferred Day of the Week")
     day_frame.pack(fill="x", padx=5, pady=5)
-
-    # Aggiungi una lista di selezione per i giorni della settimana
+    
+    # Gestione menu a tendina per la settimana
     day_var = tk.StringVar(value="Monday")
-    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    day_menu = ttk.Combobox(day_frame, textvariable=day_var, values=days_of_week, state="readonly")
-    day_menu.pack(padx=5, pady=5)
-    day_menu.current(0)  # Seleziona "Monday" di default
+    # Lista dei giorni disponibili
+    days_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    # Crea un menu a discesa per la selezione dei giorni
+    day_dropdown = tk.OptionMenu(root, day_var, *days_list)
+    day_dropdown.pack()
+    # Chiama la funzione per aggiornare la selezione dei giorni
+    update_day_selection(day_var, days_list)
 
     # Frame per la selezione dell'intervallo di tempo
     time_frame = tk.LabelFrame(root, text="Preferred Time Interval")
@@ -377,15 +406,4 @@ def create_interface(df):
 
     # Avvio dell'interfaccia grafica
     root.mainloop()
-    
-# Funzione per resettare i campi
-def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
-    content_type_var.set("Movie")
-    min_duration_var.set(0)
-    max_duration_var.set(200)
-    genre_var.selection_clear(0, tk.END)
-        
-    # Reset dei campi relativi al giorno e all'orario
-    day_var.set("Monday")
-    start_time_var.set("00:00")
-    end_time_var.set("00:00")
+

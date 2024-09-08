@@ -96,5 +96,6 @@ def recommend_based_on_embeddings(df, selected_title):
     # Ordina i risultati per similarità e restituisci i primi 5
     recommendations = df.sort_values(by='similarity', ascending=False).head(5).to_dict(orient='records')
     
+    
     return recommendations
 

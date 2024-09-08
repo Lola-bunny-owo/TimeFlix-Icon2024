@@ -5,9 +5,12 @@ from datetime import datetime, timedelta
 from fpdf import FPDF
 import json  # Importa il modulo JSON per salvare le preferenze
 import random
+import re
 from csp import apply_backtracking
 from apprNonSup import recommend_based_on_embeddings
 global root
+font_path_regular= "font/LiberationMono-Regular.ttf"
+font_path_bold= "font/LiberationMono-Bold.ttf"
 
 # Funzione per salvare le preferenze in un file JSON
 def save_preferences(preferences):
@@ -31,46 +34,79 @@ def generate_calendar(results, root):
     result_label.pack(pady=10)
     
 # Codifica in 'ascii' ignorando i caratteri non supportati
-def clean_text(text):
-    return text.encode('ascii', 'ignore').decode('ascii')
+'''def clean_text(text):
+    return text.encode('ascii', 'ignore').decode('ascii')'''
+
+# Funzione per pulire i dizionari rimuovendo i caratteri non ASCII da tutte le stringhe
+'''def clean_dict(data):
+    # Funzione interna per pulire una stringa
+    def clean_value(value):
+        if isinstance(value, str):
+            return value.encode('ascii', 'ignore').decode('ascii')
+        return value
+
+    # Applica la pulizia solo ai valori stringa del dizionario
+    return {key: clean_value(value) for key, value in data.items()}'''
+
 
 # Funzione che genera un PDF con i suggerimenti per l'utente in base alle sue preferenze
 def generate_pdf(recommendations, additional_recommendations, preferred_day, start_time, end_time):
     pdf = FPDF()
     pdf.add_page()
     
-    # Set the font and title
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Netflix Recommendations and Weekly Schedule", ln=True, align='C')
+    # Imposta il font ed il titolo
+    pdf.add_font('liberation_mono_regular', '', font_path_regular, uni=True)
+    pdf.add_font('liberation_mono_bold', '', font_path_bold, uni=True)
+    pdf.set_font("liberation_mono_bold", size=16)
+    pdf.set_text_color(255, 0, 0)
+    pdf.cell(0, 10, txt="Netflix Recommendations and Weekly Schedule", ln=True, align='C')
     pdf.ln(10)
 
-    # Write the schedule in the PDF
-    pdf.cell(200, 10, txt=f"Your preferred schedule is:", ln=True)
+    # Scrive lo schedule  ed i dettagli
+    pdf.set_font("liberation_mono_regular", size=14)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, txt=f"Your preferred schedule is:", ln=True)
     pdf.ln(5)
-    pdf.cell(200, 10, txt=f"Day: {preferred_day}", ln=True)
-    pdf.cell(200, 10, txt=f"Time: {start_time} - {end_time}", ln=True)
-    pdf.ln(10)
-
-    # Write the initial 5 recommendations
-    pdf.cell(200, 10, txt="Initial 5 Recommendations:", ln=True)
-    pdf.ln(5)
-    for result in recommendations:
-        result_cleaned = extract_title_duration_genres(result)
-        pdf.multi_cell(0, 10, result_cleaned)
-        pdf.ln(2)  # Spacing between each recommendation
     
-    # Separator
-    pdf.ln(5)
-    pdf.cell(200, 10, txt="You might also like...", ln=True, align='C')
+    pdf.set_font("liberation_mono_regular", size=12)
+    pdf.cell(0, 10, txt=f"Day: {preferred_day}", ln=True)
+    pdf.cell(0, 10, txt=f"Time: {start_time} - {end_time}", ln=True)
+    pdf.ln(10)
+    
+    # Aggiungi una linea separatrice nera
+    pdf.set_draw_color(0, 0, 0) 
+    pdf.set_line_width(0.5)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y()) 
     pdf.ln(5)
 
-    # Write the additional 3 recommendations
-    for result in additional_recommendations:  # Fix: Show the additional 3 instead of repeating
-        result_cleaned = extract_title_duration_genres(result)
-        pdf.multi_cell(0, 10, result_cleaned)
+    # Intestazione dei primi 5 suggerimenti
+    pdf.set_font("liberation_mono_bold", size=14)
+    pdf.set_text_color(255, 0, 0)
+    pdf.cell(0, 10, txt="Your 5 Recommendations:", ln=True)
+    pdf.ln(5)
+    
+    # Scrive i 5 suggerimenti con una lista numerata e formattati
+    pdf.set_font("liberation_mono_regular", size=12)
+    pdf.set_text_color(0, 0, 0)
+    for idx, result in enumerate(recommendations, 1):
+        result_cleaned =  extract_title_duration_genres_extended(result)
+        pdf.multi_cell(0, 10, f"{idx}. {result_cleaned}", border=0)
+        pdf.ln(2)  # Spaziatura tra ogni suggerimento
+    
+    # Separatore per la sezione successiva
+    pdf.ln(10)
+    pdf.set_font("liberation_mono_bold", size=14)
+    pdf.cell(0, 10, txt="You Might Also Like...", ln=True, align='C')
+    pdf.ln(5)
+
+    # Scrive i 3 suggerimenti aggiuntivi con una lista numerata e formattata
+    pdf.set_font("liberation_mono_regular", size=12)
+    for idx, result in enumerate(additional_recommendations, 1):
+        result_cleaned = extract_title_duration_genres_extended(result)
+        pdf.multi_cell(0, 10, f"{idx}. {result_cleaned}", border=0)
         pdf.ln(2)
 
-    # Save the PDF
+    # Salva il PDF
     try:
         pdf.output("Netflix_Recommendations_and_Schedule.pdf")
         messagebox.showinfo("PDF Generated", "The PDF has been successfully generated with your schedule.")
@@ -152,34 +188,43 @@ def show_recommendations(df, selected_title):
     for rec in recommendations:
         tk.Label(recommendation_frame, text=rec).pack()
 
-# Funzione che estrae e formatta le info su film o serie tv.
+# Funzione che estrae e formatta le info su film o serie TV.
+# Le info che vengono estratte sono: titolo, durata e genere
 def extract_title_duration_genres(recommendation):
     
+    # eventualmente qui dev'essere inserita una funzione che pulisce il dizionario (prima era clean_text)
+    # ma ci ho provato e non funziona. La soluzione più breve è cambiare il font del pdf
     # Gestisce il caso in cui recommendation sia un dizionario
     if isinstance(recommendation, dict):
         title = recommendation.get('Title', 'Unknown Title')
+        
         if recommendation.get('Is_movie'):
             duration = recommendation.get('Film_Duration', 'N/A')
             genres = ', '.join(recommendation.get('Genre_Film', []))
-            return f"{title}: {duration}\nGenres: {genres}"
+            return f"Title: {title}  Duration: {duration}\nGenres: {genres}"
+
         elif recommendation.get('Is_TVshow'):
             duration = recommendation.get('Show_Duration', 'N/A')
             genres = ', '.join(recommendation.get('Genre_Show', []))
-            return f"{title}: Seasons: {duration}\nGenres: {genres}"
+            return f"Title: {title}  Number of Seasons: {duration}\nGenres: {genres}"
+        
         else:
-            return f"{title}: Unknown Content"
-
-    # Gestisce il caso in cui recommendation sia una stringa (formato vecchio nel caso ci serva)
-    elif isinstance(recommendation, str):
-        parts = recommendation.split(" - ")
-        if len(parts) >= 4:
-            title = parts[1].strip()
-            duration_or_seasons = parts[2].strip()
-            genres = parts[3].replace("Genres: ", "").strip()  # Pulisce il prefisso "Genres: "
-            return f"{title}: {duration_or_seasons}\nGenres: {genres}"
+            return f"Title: {title}: Unknown Content"
 
     # Ritorna il contenuto originale se non corrisponde a nessun formato conosciuto
     return str(recommendation)  # Converte qualsiasi altro tipo in stringa
+
+# Funzione che estrae e formatta le info dell'altra funzione, con l'aggiunta di descrizione e classificazione
+def extract_title_duration_genres_extended(recommendation):
+    # Chiama la funzione principale per ottenere il titolo, durata e generi
+    basic_info = extract_title_duration_genres(recommendation)
+    
+    if isinstance(recommendation, dict):
+        description = recommendation.get('Description', 'No Description Available')
+        classification = recommendation.get('Classification', 'No Classification')
+        return f"{basic_info}\nDescription: {description}\nClassification: {classification}"
+    
+    return basic_info
 
 # Funzione che estrae il titolo di un contenuto suggerito.
 def extract_title_from_recommendation(recommendation):
@@ -189,7 +234,6 @@ def extract_title_from_recommendation(recommendation):
     else:
         print(f"Error: The recommendation format is invalid: {recommendation}")
         return "Unknown Title"
-  
 
 # Funzione che gestisce le preferenze dell'utente e richiama tutte le altre funzioni utili a tale scopo.
 def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root):
@@ -238,9 +282,6 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         # Seleziona automaticamente un suggerimento tra i 5 dati come output (random)
         selected_item = random.choice(random_recommendations)
 
-        # Converte il dizionario in una stringa formattata
-        formatted_item = format_recommendation(selected_item)
-
         # Estrai il titolo dall'item selezionato
         selected_title = extract_title_from_recommendation(selected_item)
 
@@ -256,8 +297,8 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
             messagebox.showerror("Error", str(e))  # Show an error message if the title is not found
             return  # Stop further execution if the title is not found
 
-        # Format additional recommendations properly before passing to the display function
-        additional_recommendations = [format_recommendation(rec) for rec in additional_recommendations]
+        # Formatta i suggerimenti aggiuntivi
+        # additional_recommendations = [format_recommendation(rec) for rec in additional_recommendations]
 
         # Mostra il calendario con i 5 suggerimenti iniziali ed i 3 suggerimenti aggiuntivi
         display_schedule(preferred_day, start_time, end_time, random_recommendations, root, additional_recommendations)
@@ -266,7 +307,6 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         generate_pdf(random_recommendations, additional_recommendations[:3], preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
-
 
 # Funzione per resettare i campi
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
@@ -280,7 +320,7 @@ def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var
     start_time_var.set("00:00")
     end_time_var.set("00:00")
 
-# Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
+'''# Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
 def format_recommendation(content):
     # Controlla se content è un dizionario valido con una chiave 'Title'
     if isinstance(content, dict):
@@ -297,9 +337,7 @@ def format_recommendation(content):
             return "Invalid Content Format: Missing 'Is_movie' or 'Is_TVshow'"
     else:
         return "Invalid Content Format: Not a dictionary"
-
-
-
+'''
 # Mostra la weekly schedule
 def display_schedule(day, start_time, end_time, recommendations, root, additional_recommendations=None):
     # Crea una nuova finestra per il calendario

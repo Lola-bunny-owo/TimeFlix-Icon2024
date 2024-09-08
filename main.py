@@ -4,8 +4,8 @@ import numpy as np
 import eda 
 import preprocessing
 import apprNonSup
+import appSup
 import interface
-
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
@@ -126,6 +126,38 @@ df = preprocessing.rename_feature(df)
 # Mostra tutte le colonne presenti nel DataFrame dopo l'operazione di preprocessing
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
+
+### Decision Tree - Apprendimento Supervisionato ###
+
+# Aggiungi preferenze simulate per l'utente
+df = preprocessing.add_user_preferences(df)
+
+# Bilancia i dati per evitare lo sbilanciamento delle classi
+df = preprocessing.balance_data(df)
+
+# Filtra il dataset per visualizzare solo le righe con 'user_preference' uguale a 1
+preferred_content = df[df['user_preference'] == 1]
+
+# Mostra le prime 10 righe del dataset filtrato
+print("\nPrime 10 righe del dataset con 'user_preference' uguale a 1:")
+print(preferred_content[['Title', 'user_preference']].head(10))
+
+# Addestra il Decision Tree sul dataset preprocessato
+clf = appSup.train_decision_tree(df)
+
+# Prevedi i contenuti preferiti in base al modello addestrato
+preferred_content = appSup.predict_user_preference(df, clf)
+
+if not preferred_content.empty:
+    # Salva solo i primi 20 contenuti preferiti in un file UTF-8 per evitare problemi di codifica nel terminale
+    with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
+        f.write(preferred_content[['Title', 'Genre_Film', 'Film_Duration']].head(20).to_string())
+else:
+    print("Result was predicted by the Decision Tree.")
+
+
+
+### Fine Decision Tree ###
 
 ####### 3. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
 

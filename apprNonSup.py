@@ -79,22 +79,22 @@ def update_embeddings_in_df(df, new_embeddings, column):
     else:
         print(f"Errore: Il numero di embeddings ({len(new_embeddings)}) non corrisponde al numero di righe del DataFrame ({len(df)}).")
         
-# Funzione che suggerisce contenuto basandosi sugli embeddings del genere
-def recommend_based_on_embeddings(df, content_title, num_recommendations=3):
-    # Controlla se il titolo esiste nel df
-    if content_title not in df['Title'].values:
-        raise ValueError(f"Content title '{content_title}' not found in the dataset.")
+def recommend_based_on_embeddings(df, selected_title):
+    # Seleziona l'embedding per il titolo selezionato
+    selected_embedding = df.loc[df['Title'] == selected_title, 'Genre_Embedding_Film'].values[0]
+    
+    # Assicurati che l'embedding sia un array NumPy 1D
+    selected_embedding = np.array(selected_embedding).reshape(1, -1)
 
-    # Ottiene l'embedding del genere per il contenuto selezionato
-    selected_embedding = df[df['Title'] == content_title]['Genre_Embedding_Film'].values[0]
+    # Calcola la similarità coseno tra l'embedding selezionato e tutti gli altri
+    df['similarity'] = df['Genre_Embedding_Film'].apply(
+        lambda x: cosine_similarity(
+            selected_embedding, np.array(x).reshape(1, -1) if isinstance(x, (list, np.ndarray)) and len(x) > 0 else np.zeros(selected_embedding.shape[1])
+        )[0][0]
+    )
     
-    # Calcola la similarità del coseno tra l'embedding selezionato e tutti gli altri
-    df['similarity'] = df['Genre_Embedding_Film'].apply(lambda x: cosine_similarity([selected_embedding], [x])[0][0])
-    
-    # Ordina in base alla similarità ed esclude il contenuto selezionato
-    recommendations_df = df[df['Title'] != content_title].sort_values('similarity', ascending=False)
-    
-    # Restituisce i top N suggerimenti
-    recommendations = recommendations_df['Title'].head(num_recommendations).tolist()
+    # Ordina i risultati per similarità e restituisci i primi 5
+    recommendations = df.sort_values(by='similarity', ascending=False).head(5).to_dict(orient='records')
     
     return recommendations
+

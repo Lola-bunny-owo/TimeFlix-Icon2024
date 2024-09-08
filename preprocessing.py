@@ -1,5 +1,9 @@
 import pandas as pd
 from gensim.models import Word2Vec
+import numpy as np
+from sklearn.utils import resample
+from sklearn.decomposition import PCA
+
 
 #### Funzioni per la fase di preprocessing
 
@@ -125,6 +129,54 @@ def rename_feature(df):
     print("\nRenaming delle colonne..")
     df.rename(columns= new_features_names, inplace= True)
     return df
+
+# Funzioni per la preparazione dei dati per il Decision Tree
+
+def prepare_data_for_decision_tree(df):
+    # Aggiungi le preferenze dell'utente al DataFrame
+    df['Genre_Embedding_Film'] = df['Genre_Embedding_Film'].apply(lambda x: np.array(x) if isinstance(x, (list, np.ndarray)) else np.zeros(100))
+    
+    genre_embedding_matrix = np.stack(df['Genre_Embedding_Film'])
+    
+    # Calcola il numero di componenti principali da utilizzare
+    n_samples, n_features = genre_embedding_matrix.shape
+    n_components = min(n_samples, n_features)
+    
+    pca = PCA(n_components=n_components)  # PCA con numero di componenti massimo
+    genre_embedding_pca = pca.fit_transform(genre_embedding_matrix)
+
+    # Aggiungi le feature di genere ridotte e le feature esistenti al DataFrame
+    X = np.column_stack([genre_embedding_pca, df[['Film_Duration', 'Is_movie', 'Is_TVshow']].values])
+    y = df['user_preference']
+
+    return X, y
+
+def add_user_preferences(df):
+    # Definisci i generi che preferisci
+    preferred_genres = ['International Movies']
+
+    # Aggiungi una colonna di preferenze simulata basata su criteri: genere, durata e classificazione
+    df['user_preference'] = df.apply(lambda row: 1 if any(genre in row['Genre_Film'] for genre in preferred_genres) 
+                                     and row['Film_Duration'] < 200 and row['Classification'] in ['Family'] else 0, axis=1)
+    return df
+
+def balance_data(df):
+    # Separa il DataFrame in classi di maggioranza e minoranza
+    df_majority = df[df.user_preference == 0]
+    df_minority = df[df.user_preference == 1]
+
+    # Upsample della classe di minoranza
+    df_minority_upsampled = resample(df_minority, replace=True, n_samples=len(df_majority), random_state=42)
+
+    # Combina le classi di maggioranza e minoranza
+    df_balanced = pd.concat([df_majority, df_minority_upsampled])
+
+    return df_balanced
+
+
+
+
+
 
     
     

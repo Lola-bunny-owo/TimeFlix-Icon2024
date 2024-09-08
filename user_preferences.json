@@ -1,1 +1,1 @@
-{"content_type": "Movie", "min_duration": 50, "max_duration": 200, "genres": ["Anime Features", "Classic Movies"], "preferred_day": "Wednesday", "start_time": "00:00", "end_time": "00:00"}
+{"content_type": "Movie", "min_duration": 0, "max_duration": 200, "genres": ["Anime Features"], "preferred_day": "Monday", "start_time": "00:00", "end_time": "00:00"}

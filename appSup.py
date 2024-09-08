@@ -22,7 +22,7 @@ def train_decision_tree(df):
 
     # Valuta il modello
     accuracy = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {accuracy}")
+    print(f"\nAccuracy: {accuracy}\n")
     print(classification_report(y_test, y_pred))
 
     return clf

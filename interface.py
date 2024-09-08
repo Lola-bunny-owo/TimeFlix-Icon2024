@@ -120,7 +120,7 @@ def update_genre_list(content_type, genre_var, df):
         
     # Debug: gestisce il caso in cui non ci siano generi disponibili per il tipo di contenuto selezionato
     if not genre_list:
-        messagebox.showerror("Errore", "Nessun genere disponibile per il tipo di contenuto selezionato.")
+        messagebox.showerror("Error", "No genre available for the selected content type.")
 
 # Funzione che mostra i suggerimenti basati sugli embeddings dei generi
 def show_recommendations(df, selected_title):
@@ -195,7 +195,7 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
     # Verifica se è stata effettuata una selezione dei generi valida
     if not selected_genres:
        if not selected_genres or not all(isinstance(genre, str) for genre in selected_genres):
-        messagebox.showerror("Errore", "Per favore, seleziona almeno un genere valido.")
+        messagebox.showerror("Error", "Please, select at least one valid genre.")
         print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output to trace the issue
         return  # Stop execution if the genre selection is invalid
     

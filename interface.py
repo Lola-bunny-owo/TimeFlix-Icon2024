@@ -18,37 +18,6 @@ def save_preferences(preferences):
         json.dump(preferences, file)
     messagebox.showinfo("Preferences Saved", "Your preferences have been saved successfully")
 
-# Funzione per visualizzare i risultati su un calendario
-def generate_calendar(results, root):
-    now = datetime.now()
-    cal = calendar.TextCalendar(calendar.SUNDAY)
-    cal_str = cal.formatmonth(now.year, now.month)
-
-    top = tk.Toplevel(root)
-    top.title("Calendar")
-    
-    cal_label = tk.Label(top, text=cal_str, font=("Courier", 10))
-    cal_label.pack(pady=10)
-
-    result_label = tk.Label(top, text="\n".join(results), justify='left')
-    result_label.pack(pady=10)
-    
-# Codifica in 'ascii' ignorando i caratteri non supportati
-'''def clean_text(text):
-    return text.encode('ascii', 'ignore').decode('ascii')'''
-
-# Funzione per pulire i dizionari rimuovendo i caratteri non ASCII da tutte le stringhe
-'''def clean_dict(data):
-    # Funzione interna per pulire una stringa
-    def clean_value(value):
-        if isinstance(value, str):
-            return value.encode('ascii', 'ignore').decode('ascii')
-        return value
-
-    # Applica la pulizia solo ai valori stringa del dizionario
-    return {key: clean_value(value) for key, value in data.items()}'''
-
-
 # Funzione che genera un PDF con i suggerimenti per l'utente in base alle sue preferenze
 def generate_pdf(recommendations, additional_recommendations, preferred_day, start_time, end_time):
     pdf = FPDF()
@@ -235,6 +204,7 @@ def extract_title_from_recommendation(recommendation):
         print(f"Error: The recommendation format is invalid: {recommendation}")
         return "Unknown Title"
 
+# Funzione per rimuovere i duplicati dai suggerimenti
 def remove_duplicates(initial_recommendations, additional_recommendations):
     # Extract titles from the initial recommendations
     initial_titles = [rec['Title'] for rec in initial_recommendations if isinstance(rec, dict) and 'Title' in rec]
@@ -338,24 +308,6 @@ def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var
     start_time_var.set("00:00")
     end_time_var.set("00:00")
 
-'''# Funzione che formatta le info su un contenuto in una stringa, prendendo in input un dizionario
-def format_recommendation(content):
-    # Controlla se content è un dizionario valido con una chiave 'Title'
-    if isinstance(content, dict):
-        title = content.get('Title', 'Unknown Title')
-        if content.get('Is_movie'):
-            duration = content.get('Film_Duration', 'N/A')
-            genres = ', '.join(content.get('Genre_Film', []))
-            return f"{title}: {duration}\nGenres: {genres}"
-        elif content.get('Is_TVshow'):
-            duration = content.get('Show_Duration', 'N/A')
-            genres = ', '.join(content.get('Genre_Show', []))
-            return f"{title}: Seasons: {duration}\nGenres: {genres}"
-        else:
-            return "Invalid Content Format: Missing 'Is_movie' or 'Is_TVshow'"
-    else:
-        return "Invalid Content Format: Not a dictionary"
-'''
 # Mostra la weekly schedule
 def display_schedule(day, start_time, end_time, recommendations, root, additional_recommendations=None):
     # Crea una nuova finestra per il calendario
@@ -497,7 +449,7 @@ def validate_time_format(value):
         return False
     return True
 
-# Funzione che valida ..
+# Funzione per validare il formato
 def on_validate(P):
     if P == "":
         return True  # Permetti i campi vuoti per il reset senza mostrare errori
@@ -522,7 +474,6 @@ def create_time_frame(root):
     tk.Entry(time_frame, textvariable=start_time_var, width=5, validate="focusout", validatecommand=vcmd).pack(side="left", padx=5)
     tk.Label(time_frame, text="End Time").pack(side="left", padx=5)
     tk.Entry(time_frame, textvariable=end_time_var, width=5, validate="focusout", validatecommand=vcmd).pack(side="left", padx=5)
-
    
 # Funzione per creare e avviare l'interfaccia grafica
 def create_interface(df):

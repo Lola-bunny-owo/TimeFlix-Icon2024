@@ -83,7 +83,7 @@ print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= [
 df= preprocessing.one_hot_enc(df) 
 preprocessing.w2v(df)
 
-#### PCA - Apprendimento Non Supervisionato ###
+#### 3. PCA - Apprendimento Non Supervisionato ###
 
 # Conversione degli embeddings in array di float e standardizzazione degli array
 embeddings_array_film = apprNonSup.preprocess_embeddings(df, 'Genre_Embedding_Film')
@@ -127,7 +127,7 @@ df = preprocessing.rename_feature(df)
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
 
-### Decision Tree - Apprendimento Supervisionato ###
+### 4. Decision Tree - Apprendimento Supervisionato ###
 
 # Aggiungi preferenze simulate per l'utente
 df = preprocessing.add_user_preferences(df)
@@ -155,11 +155,9 @@ if not preferred_content.empty:
 else:
     print("Result was predicted by the Decision Tree.")
 
-
-
 ### Fine Decision Tree ###
 
-####### 3. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
+####### 5. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
 
 # Inizializzazione dell'interfaccia grafica
 interface.create_interface(df)

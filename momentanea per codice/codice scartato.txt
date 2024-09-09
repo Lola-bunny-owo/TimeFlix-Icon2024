@@ -300,3 +300,36 @@ def extract_title_from_recommendation(recommendation):
     if len(parts) > 1:
         return parts[1].strip()  # Return the title and remove any extra spaces
     return recommendation  # Fallback to the whole string if it doesn't match the format
+
+
+---------------- Funzione per generare il dataset fittizio nel file di preprocessing, fase apprendimento probabilistico
+# Funzione per generare dati sintetici in un dataset fittizio con preferenze di visione
+'''def generate_synthetic_time_pref(n_samples):
+    
+    # Imposta un seme fisso per il generatore di numeri casuali per ottenere risultati riproducibili
+    np.random.seed(42)
+    
+    # Definisce la lista dei giorni della settimana e una lista di orari a intervalli di un'ora
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    times = pd.date_range('00:00', '23:59', freq='1h').strftime('%H:%M') 
+
+    data = []
+    for _ in range(n_samples): # Per ogni campione sceglie casualmente un giorno ed un orario di inizio
+        day = np.random.choice(days)
+        start_time = np.random.choice(times)
+        
+        # Genera un orario di fine che sia almeno 1 ora dopo l'inizio, con una durata casuale tra 1 e 3 ore
+        start_minutes = int(start_time.split(':')[0]) * 60 + int(start_time.split(':')[1])
+        end_minutes = start_minutes + np.random.randint(60, 180)  
+        end_time = f"{end_minutes // 60 % 24:02d}:{end_minutes % 60:02d}"
+
+        # Imposta la preferenza ad 1 se:
+        # - il giorno è un fine settimana (Saturday e Sunday) AND l'orario d'inizio è tra le 10:00 e le 23:00
+        # - il giorno è un qualunque altro giorno AND l'orario d'inizio è tra le 18:00 e le 22:00
+        is_preferred = 1 if ((day in ['Saturday', 'Sunday'] and 10 <= start_minutes // 60 < 23) or
+                            (day not in ['Saturday', 'Sunday'] and 18 <= start_minutes // 60 <= 22)) else 0
+
+        # Raccolta di tutti i campioni generati in un dataframe con colonne Day, Start_Time, End_Time e Is_Preferred
+        data.append([day, start_time, end_time, is_preferred])  
+
+    return pd.DataFrame(data, columns=['Day', 'Start_Time', 'End_Time', 'Is_Preferred'])'''

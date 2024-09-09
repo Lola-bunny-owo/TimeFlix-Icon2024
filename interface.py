@@ -235,6 +235,27 @@ def extract_title_from_recommendation(recommendation):
         print(f"Error: The recommendation format is invalid: {recommendation}")
         return "Unknown Title"
 
+def remove_duplicates(initial_recommendations, additional_recommendations):
+    # Extract titles from the initial recommendations
+    initial_titles = [rec['Title'] for rec in initial_recommendations if isinstance(rec, dict) and 'Title' in rec]
+
+    # Filter out duplicates from the additional recommendations based on title
+    filtered_additional = [
+        rec for rec in additional_recommendations
+        if isinstance(rec, dict) and 'Title' in rec and rec['Title'] not in initial_titles
+    ]
+
+    # To ensure no duplicates in the additional recommendations themselves
+    seen_titles = set()
+    unique_additional = []
+    for rec in filtered_additional:
+        title = rec['Title']
+        if title not in seen_titles:
+            unique_additional.append(rec)
+            seen_titles.add(title)
+
+    return unique_additional
+
 # Funzione che gestisce le preferenze dell'utente e richiama tutte le altre funzioni utili a tale scopo.
 def submit_preferences(df, content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var, root):
     content_type = content_type_var.get()
@@ -250,16 +271,15 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
 
     # Verifica se è stata effettuata una selezione dei generi valida
     if not selected_genres:
-       if not selected_genres or not all(isinstance(genre, str) for genre in selected_genres):
-            messagebox.showerror("Error", "Please, select at least one valid genre.")
-            print(f"Debug Info - selected_genres: {selected_genres}")  # Debugging output per tracciare l'errore
-            return  # Ferma l'esecuzione se il genere non è valido
+        messagebox.showerror("Error", "Please, select at least one genre.")
+        return
     
     # Prende i giorni preferiti e l'orario
     preferred_day = day_var.get()
     start_time = start_time_var.get()
     end_time = end_time_var.get()
-    
+
+    # Salva le preferenze
     preferences = {
         "content_type": content_type,
         "min_duration": min_duration,
@@ -269,42 +289,40 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         "start_time": start_time,
         "end_time": end_time
     }
+    save_preferences(preferences)
 
-    save_preferences(preferences)  # Salva le preferenze in formato JSON
-    
-    # Filtra i risultati applicando la tecnica di backtracking, basandosi sulle preferenze dell'utente
+    # Filtra i risultati in base al tipo di contenuto selezionato e alle preferenze
     results = apply_backtracking(df, Is_movie, Is_TVshow, min_duration, max_duration, selected_genres)
-    
+
     if len(results) > 0:
-        # Genera 5 suggerimenti random
+        # Genera 5 suggerimenti casuali rispettando il tipo di contenuto
         random_recommendations = random.sample(results, min(5, len(results)))
 
-        # Seleziona automaticamente un suggerimento tra i 5 dati come output (random)
+        # Seleziona automaticamente un suggerimento tra i 5 dati come output
         selected_item = random.choice(random_recommendations)
-
-        # Estrai il titolo dall'item selezionato
         selected_title = extract_title_from_recommendation(selected_item)
 
-        # Check if the title extraction is correct
-        if selected_title == "Unknown Title":
-            messagebox.showerror("Error", "The selected recommendation has no valid title.")
-            return  # Stop the execution if the title is not valid
-
-        # Genera 3 suggerimenti aggiuntivi basandosi sul titolo selezionato
-        try:
-            additional_recommendations = recommend_based_on_embeddings(df, selected_title)[:3]  # Limit to 3
-        except ValueError as e:
-            messagebox.showerror("Error", str(e))  # Show an error message if the title is not found
-            return  # Stop further execution if the title is not found
-
-        # Formatta i suggerimenti aggiuntivi
-        # additional_recommendations = [format_recommendation(rec) for rec in additional_recommendations]
-
-        # Mostra il calendario con i 5 suggerimenti iniziali ed i 3 suggerimenti aggiuntivi
-        display_schedule(preferred_day, start_time, end_time, random_recommendations, root, additional_recommendations)
+        # Genera 3 suggerimenti aggiuntivi rispettando il tipo di contenuto
+        additional_recommendations = recommend_based_on_embeddings(df, selected_title, num_recommendations=3, content_type=content_type)
         
-        # Genera il PDF separando i 5 suggerimenti iniziali ed i 3 aggiuntivi
-        generate_pdf(random_recommendations, additional_recommendations[:3], preferred_day, start_time, end_time)
+        # Remove duplicates from additional recommendations
+        filtered_additional_recommendations = remove_duplicates(random_recommendations, additional_recommendations)
+
+        # If no additional recommendations are left, fetch backup recommendations
+        if len(filtered_additional_recommendations) == 0:
+            random_title = df[df['Is_TVshow' if Is_TVshow else 'Is_movie'] == 1]['Title'].sample(1).values[0]
+            backup_recommendations = recommend_based_on_embeddings(df, random_title, num_recommendations=3, content_type=content_type)
+            
+            # Ensure the backup recommendations have no duplicates
+            filtered_additional_recommendations = remove_duplicates(random_recommendations, backup_recommendations)
+
+        # If backup recommendations are still empty, display fallback message
+        if len(filtered_additional_recommendations) == 0:
+            filtered_additional_recommendations = ["No additional recommendations available"]
+
+        # Display the recommendations and generate the PDF
+        display_schedule(preferred_day, start_time, end_time, random_recommendations, root, filtered_additional_recommendations)
+        generate_pdf(random_recommendations, filtered_additional_recommendations[:3], preferred_day, start_time, end_time)
     else:
         messagebox.showinfo("No Results", "No results match your preferences.")
 
@@ -370,7 +388,7 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
             header_frame,
             text=f"{day_name}\n{date_str}",
             font=("Arial", 10, "bold"),
-            bg="#3b3b3b" if day_name != day else "#3f83e0",  # Cambia colore se è il giorno selezionato
+            bg="#3b3b3b" if day_name != day else "#6a8fb6",  # Cambia colore se è il giorno selezionato
             fg="white",
             padx=10,
             pady=5,
@@ -456,9 +474,10 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
                 text=title_duration_genres,
                 bg="#fff3cd",
                 font=("Arial", 9),
-                justify='left',
+                justify='center',
                 wraplength=400
             )
+
             recommendation_label.pack(anchor='w', fill='x')
 
     return calendar_window

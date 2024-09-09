@@ -9,7 +9,7 @@ from scipy.stats import skew, kurtosis, zscore
 # Funzione per avere avere delle informazioni generali sul dataset
 def dataset_info(df):
     
-    print("Verifica se il dataset è caricato correttamente stampandone le prime 3 righe: \n", df.head(3))
+    print("\nVerifica se il dataset è caricato correttamente stampandone le prime 3 righe: \n", df.head(3))
     
     print("\nColonne presenti nel dataset:", df.columns)
     print("\nNumero di righe e colonne:", df.shape)

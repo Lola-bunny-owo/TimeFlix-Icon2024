@@ -3,6 +3,8 @@ from gensim.models import Word2Vec
 import numpy as np
 from sklearn.utils import resample
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import LabelEncoder
+from datetime import datetime
 
 
 #### Funzioni per la fase di preprocessing
@@ -130,8 +132,8 @@ def rename_feature(df):
     df.rename(columns= new_features_names, inplace= True)
     return df
 
-# Funzioni per la preparazione dei dati per il Decision Tree
 
+# Funzioni per la preparazione dei dati per il Decision Tree
 def prepare_data_for_decision_tree(df):
     # Aggiungi le preferenze dell'utente al DataFrame
     df['Genre_Embedding_Film'] = df['Genre_Embedding_Film'].apply(lambda x: np.array(x) if isinstance(x, (list, np.ndarray)) else np.zeros(100))
@@ -172,9 +174,90 @@ def balance_data(df):
     df_balanced = pd.concat([df_majority, df_minority_upsampled])
 
     return df_balanced
+    
+# Funzione per generare dati sintetici bilanciati in un dataset fittizio con preferenze di visione
+def generate_synthetic_time_pref(n_samples):
+    # Imposta un seme fisso per il generatore di numeri casuali per ottenere risultati riproducibili
+    np.random.seed(42)
 
+    # Definisce la lista dei giorni della settimana e una lista di orari a intervalli di un'ora
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    times = pd.date_range('00:00', '23:59', freq='1h').strftime('%H:%M')
 
+    data = []
 
+    # Calcola il numero di campioni per ogni classe (1 e 0)
+    n_preferred = n_samples // 2
+    n_not_preferred = n_samples - n_preferred
+
+    # Funzione per generare un singolo campione
+    def generate_sample(is_preferred):
+        while True:
+            day = np.random.choice(days)
+            start_time = np.random.choice(times)
+            start_minutes = int(start_time.split(':')[0]) * 60 + int(start_time.split(':')[1])
+            end_minutes = start_minutes + np.random.randint(60, 180)
+            end_time = f"{end_minutes // 60 % 24:02d}:{end_minutes % 60:02d}"
+            
+            # Criteri di preferenza come indicato
+            if is_preferred:
+                if (day in ['Saturday', 'Sunday'] and 10 <= start_minutes // 60 < 23) or \
+                   (day not in ['Saturday', 'Sunday'] and 18 <= start_minutes // 60 <= 22):
+                    return [day, start_time, end_time, 1]
+            else:
+                if not ((day in ['Saturday', 'Sunday'] and 10 <= start_minutes // 60 < 23) or \
+                        (day not in ['Saturday', 'Sunday'] and 18 <= start_minutes // 60 <= 22)):
+                    return [day, start_time, end_time, 0]
+
+    # Genera campioni preferiti (Is_Preferred = 1)
+    for _ in range(n_preferred):
+        data.append(generate_sample(is_preferred=1))
+
+    # Genera campioni non preferiti (Is_Preferred = 0)
+    for _ in range(n_not_preferred):
+        data.append(generate_sample(is_preferred=0))
+
+    # Crea un DataFrame dai dati generati
+    return pd.DataFrame(data, columns=['Day', 'Start_Time', 'End_Time', 'Is_Preferred'])
+
+# Funzione per il preprocessamento dei dati del dataset delle preferenze
+def preprocess_data(df):
+    
+    # Codifica del giorno e conversione degli orari in formato numerico
+    le_day = LabelEncoder()
+    df['Day_Encoded'] = le_day.fit_transform(df['Day'])
+
+    # Conversione degli orari in minuti per facilitare i calcoli
+    df['Start_Time'] = df['Start_Time'].apply(lambda x: convert_time_to_minutes(x))
+    df['End_Time'] = df['End_Time'].apply(lambda x: convert_time_to_minutes(x))
+    
+    # Stampa le prime righe del dataset preprocessato per vedere come appare
+    print("\nDataset Preprocessato:")
+    print(df.head())
+    
+    # Selezione delle feature e della target
+    X = df[['Day_Encoded', 'Start_Time', 'End_Time']]
+    y = df['Is_Preferred']
+    
+    # Stampa le feature e le etichette
+    print("\n--- Feature (X) ---")
+    print(X.head())
+    print("\n--- Target (y) ---")
+    print(y.head())
+
+    return X, y, le_day
+
+# Funzione per convertire l'orario in minuti
+def convert_time_to_minutes(time_str):
+    
+    hours, minutes = map(int, time_str.split(':'))
+    return hours * 60 + minutes
+
+# Funzione per convertire i minuti in formato orario HH:MM
+def convert_minutes_to_time(minutes):
+    hours = minutes // 60
+    mins = minutes % 60
+    return f'{hours:02d}:{mins:02d}'
 
 
 

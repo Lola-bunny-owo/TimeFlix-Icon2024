@@ -6,6 +6,8 @@ import preprocessing
 import apprNonSup
 import appSup
 import interface
+import appProb
+from sklearn.utils import resample
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
@@ -127,7 +129,7 @@ df = preprocessing.rename_feature(df)
 print("\nColonne presenti nel DataFrame dopo il preprocessing:")
 print(df.columns)
 
-### 4. Decision Tree - Apprendimento Supervisionato ###
+####### 4. DECISION TREE - APPRENDIMENTO SUPERVISIONATO #######
 
 # Aggiungi preferenze simulate per l'utente
 df = preprocessing.add_user_preferences(df)
@@ -135,10 +137,8 @@ df = preprocessing.add_user_preferences(df)
 # Bilancia i dati per evitare lo sbilanciamento delle classi
 df = preprocessing.balance_data(df)
 
-# Filtra il dataset per visualizzare solo le righe con 'user_preference' uguale a 1
+# Filtra il dataset per visualizzare solo le righe con 'user_preference' uguale a 1. Mostra le prime 10 righe
 preferred_content = df[df['user_preference'] == 1]
-
-# Mostra le prime 10 righe del dataset filtrato
 print("\nPrime 10 righe del dataset con 'user_preference' uguale a 1:")
 print(preferred_content[['Title', 'user_preference']].head(10))
 
@@ -153,11 +153,37 @@ if not preferred_content.empty:
     with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
         f.write(preferred_content[['Title', 'Genre_Film', 'Film_Duration']].head(20).to_string())
 else:
-    print("Result was predicted by the Decision Tree.")
+    print("Il risultato è stato predetto dal Decision Tree.")
+
+print(df.columns)
 
 ### Fine Decision Tree ###
 
-####### 5. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
+####### 5. NAIVE BAYES - APPRENDIMENTO PROBABILISTICO #######
+
+# Genera un dataset con 200 campioni
+time_pref_dataset = preprocessing.generate_synthetic_time_pref(200)
+print("\nDataset Sintetico Generato:")
+print(time_pref_dataset.head(3))
+
+# Controllo del bilanciamento iniziale
+print("\nDistribuzione iniziale:")
+print(time_pref_dataset['Is_Preferred'].value_counts())
+
+# Salva il dataset generato se necessario
+time_pref_dataset.to_csv('dataset/time_preferences_balanced.csv', index=False)
+
+# Preprocessing dei dati (conversione delle ore e encoding dei giorni)
+X, y, le_day= preprocessing.preprocess_data(time_pref_dataset)
+
+# Addestramento del modello Naive Bayes
+model = appProb.train_naive_bayes(X, y)
+
+# Predizione su nuovi dati (ad esempio, ottieni i migliori orari)
+best_day, best_start_time, best_end_time = appProb.predict_best_time(model, le_day)
+print(f"\nL'utente è più propenso a guardare contenuti il {best_day} dalle {best_start_time} alle {best_end_time}.")
+
+####### 6. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
 
 # Inizializzazione dell'interfaccia grafica
 interface.create_interface(df)

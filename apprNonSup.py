@@ -78,24 +78,31 @@ def update_embeddings_in_df(df, new_embeddings, column):
         df[column] = list(new_embeddings)  # Converti l'array di embeddings in una lista di array
     else:
         print(f"Errore: Il numero di embeddings ({len(new_embeddings)}) non corrisponde al numero di righe del DataFrame ({len(df)}).")
-        
-def recommend_based_on_embeddings(df, selected_title):
-    # Seleziona l'embedding per il titolo selezionato
-    selected_embedding = df.loc[df['Title'] == selected_title, 'Genre_Embedding_Film'].values[0]
+
+# Funzione che suggerisce contenuto basandosi sugli embeddings del genere
+def recommend_based_on_embeddings(df, content_title, num_recommendations=3, content_type="Movie"):
+    # Check if the title exists in the df
+    if content_title not in df['Title'].values:
+        raise ValueError(f"Content title '{content_title}' not found in the dataset.")
     
-    # Assicurati che l'embedding sia un array NumPy 1D
+    # Get the embedding for the selected content
+    selected_embedding = df[df['Title'] == content_title]['Genre_Embedding_Film'].values[0]
+
+    # Ensure the embedding is a NumPy 1D array
     selected_embedding = np.array(selected_embedding).reshape(1, -1)
 
-    # Calcola la similarità coseno tra l'embedding selezionato e tutti gli altri
+    # Calculate the cosine similarity between the selected embedding and all others
     df['similarity'] = df['Genre_Embedding_Film'].apply(
         lambda x: cosine_similarity(
-            selected_embedding, np.array(x).reshape(1, -1) if isinstance(x, (list, np.ndarray)) and len(x) > 0 else np.zeros(selected_embedding.shape[1])
+            selected_embedding, np.array(x).reshape(1, -1) if isinstance(x, (list, np.ndarray)) else np.zeros(selected_embedding.shape[1])
         )[0][0]
     )
-    
-    # Ordina i risultati per similarità e restituisci i primi 5
-    recommendations = df.sort_values(by='similarity', ascending=False).head(5).to_dict(orient='records')
-    
-    
+
+    # Filter by content type (Is_Movie or Is_TVshow)
+    if content_type == "TV Show":
+        recommendations = df[df['Is_TVshow'] == 1].sort_values(by='similarity', ascending=False).head(num_recommendations).to_dict(orient='records')
+    else:
+        recommendations = df[df['Is_movie'] == 1].sort_values(by='similarity', ascending=False).head(num_recommendations).to_dict(orient='records')
+
     return recommendations
 

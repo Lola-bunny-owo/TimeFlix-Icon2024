@@ -22,6 +22,7 @@ def train_decision_tree(df):
 
     # Valuta il modello
     accuracy = accuracy_score(y_test, y_pred)
+
     print(f"\nAccuracy: {accuracy}\n")
     print(classification_report(y_test, y_pred))
 
@@ -37,8 +38,7 @@ def predict_user_preference(df, clf):
     
     if not preferred_content.empty:
         # Salva i contenuti preferiti in un file di testo
-        with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
-            f.write(preferred_content[['Title', 'user_preference']].to_string())
+        preferred_content[['Title', 'user_preference']].to_csv('preferred_content_output.txt', encoding='utf-8', index=False)
         print("Preferred content saved to 'preferred_content_output.txt'.")
     
     return preferred_content

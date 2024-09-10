@@ -9,8 +9,7 @@ from scipy.stats import skew, kurtosis, zscore
 # Funzione per avere avere delle informazioni generali sul dataset
 def dataset_info(df):
     
-    print("\nVerifica se il dataset è caricato correttamente stampandone le prime 3 righe: \n", df.head(3))
-    
+    print("\nVerifica se il dataset e' caricato correttamente stampandone le prime 3 righe: \n", df.head(3))
     print("\nColonne presenti nel dataset:", df.columns)
     print("\nNumero di righe e colonne:", df.shape)
     print("\nInformazioni generali sul dataset:\n")
@@ -73,7 +72,7 @@ def plot_combined_genres_by_type(df):
     # Gestisci i valori NaN nel caso un genere sia presente solo nei film o nelle serie TV
     combined_genres.fillna(0, inplace=True)
 
-    # Melt il df combinato per unire le colonne dei generi in una colonna
+    # Resetta l'indice e fai il melt per creare un formato adatto per il grafico
     combined_genres = combined_genres.reset_index().melt(id_vars='index', var_name='Genre Type', value_name='Count')
 
     # Plot dei generi combinati
@@ -109,21 +108,21 @@ def calculate_skew_kurtosis(df, column):
 # Funzione per gestire skewness: se è troppo alta (> 1), applica una trasformazione logaritmica
 def manage_skew(df, skew, kurt, column):
     if abs(skew) > 1:
-        print(f"La skewness di {column} è elevata: {skew}. Applico una trasformazione logaritmica.")
+        print(f"La skewness di {column} e' elevata: {skew}. Applico una trasformazione logaritmica.")
         df[column] = np.log1p(df[column])  # Trasformazione logaritmica
         print("Valori dopo la trasformazione:")
         skew, kurt = calculate_skew_kurtosis(df, column)
         return skew, kurt
     else:
-        print(f"La skewness di {column} non è elevata. Valori in regola.")
+        print(f"La skewness di {column} non e' elevata. Valori in regola.")
         return skew, kurt
 
 # Funzione per gestire la kurtosis: se è elevata (> 3), potrebbe indicare la presenza di outliers significativi
 def manage_kurt(kurt, column):
     if kurt > 3:
-        print(f"La kurtosis di {column} è elevata: {kurt}. Potrebbero esserci outliers significativi!")
+        print(f"La kurtosis di {column} e' elevata: {kurt}. Potrebbero esserci outliers significativi!")
     else:
-        print(f"La kurtosis di {column} non è elevata. Valori in regola.") 
+        print(f"La kurtosis di {column} non e' elevata. Valori in regola.") 
 
 # Funzione per identificare gli outliers in una colonna basandosi sul calcolo del percentile (°99)
 def find_outliers(df, column, percentile= 0.99):

@@ -1,9 +1,8 @@
 import pandas as pd
 from sklearn.naive_bayes import GaussianNB
-from sklearn.preprocessing import LabelEncoder
-from preprocessing import convert_time_to_minutes, convert_minutes_to_time
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from preprocessing import convert_time_to_minutes, convert_minutes_to_time
 
 # Addestramento del modello Naive Bayes
 def train_naive_bayes(X, y):
@@ -66,6 +65,7 @@ def predict_best_time(model, le_day):
     print("\nCombinazioni con Prediction == 1: ")
     
     if not positive_combinations.empty:
+        print("\nCombinazioni positive (tempo preferito): ")
         print(positive_combinations.head(10))
         
         # Trova la prima combinazione positiva per il giorno e l'intervallo di tempo migliore

@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 # Funzione per la conversione degli Embeddings da lista di stringhe ad array di float
 def convert_embeddings(df, embedding):
-    def safe_conversion(x):
-        embedding_length= 100
-        
+    embedding_length= 100
+
+    def safe_conversion(x):  
         if isinstance(x, (list, np.ndarray)) and len(x) > 0:
             return np.array(x, dtype='float64')
         return np.zeros(embedding_length)  # Sostituisci embedding_length con la lunghezza desiderata
@@ -66,6 +66,7 @@ def apply_pca_and_plot(n_components, embeddings, title):
     ## plot_explained_variance(explained_variance, title)
     return embeddings_pca, explained_variance
 
+# Funzione per calcolare il numero di componenti principali necessarie per mantenere una certa varianza
 def calculate_components_needed(explained_variance, threshold_comp, title):
     components_needed = np.argmax(explained_variance >= threshold_comp) + 1
     print(f"\nNumero di componenti principali necessarie per mantenere il {threshold_comp * 100}% della varianza per {title}: {components_needed}")
@@ -77,28 +78,28 @@ def update_embeddings_in_df(df, new_embeddings, column):
     if len(new_embeddings) == len(df):
         df[column] = list(new_embeddings)  # Converti l'array di embeddings in una lista di array
     else:
-        print(f"Errore: Il numero di embeddings ({len(new_embeddings)}) non corrisponde al numero di righe del DataFrame ({len(df)}).")
+        print(f"Errore: il numero di embeddings ({len(new_embeddings)}) non corrisponde al numero di righe del DataFrame ({len(df)}).")
 
 # Funzione che suggerisce contenuto basandosi sugli embeddings del genere
 def recommend_based_on_embeddings(df, content_title, num_recommendations=3, content_type="Movie"):
-    # Check if the title exists in the df
+    # Verifica che il titolo del contenuto sia presente nel DataFrame
     if content_title not in df['Title'].values:
         raise ValueError(f"Content title '{content_title}' not found in the dataset.")
     
-    # Get the embedding for the selected content
+    # Seleziona l'embedding del genere per il contenuto specificato
     selected_embedding = df[df['Title'] == content_title]['Genre_Embedding_Film'].values[0]
 
-    # Ensure the embedding is a NumPy 1D array
+    #  Seleziona l'embedding del genere per il contenuto specificato
     selected_embedding = np.array(selected_embedding).reshape(1, -1)
 
-    # Calculate the cosine similarity between the selected embedding and all others
+    # Calcola la similarità coseno tra l'embedding selezionato e tutti gli altri embeddings
     df['similarity'] = df['Genre_Embedding_Film'].apply(
         lambda x: cosine_similarity(
             selected_embedding, np.array(x).reshape(1, -1) if isinstance(x, (list, np.ndarray)) else np.zeros(selected_embedding.shape[1])
         )[0][0]
     )
 
-    # Filter by content type (Is_Movie or Is_TVshow)
+    # Seleziona i film o le serie TV in base al tipo di contenuto specificato
     if content_type == "TV Show":
         recommendations = df[df['Is_TVshow'] == 1].sort_values(by='similarity', ascending=False).head(num_recommendations).to_dict(orient='records')
     else:

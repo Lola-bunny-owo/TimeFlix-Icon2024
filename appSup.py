@@ -2,6 +2,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report
 from preprocessing import prepare_data_for_decision_tree
+import matplotlib.pyplot as plt
+from sklearn.tree import plot_tree 
 
 # Funzione per addestrare un albero decisionale
 def train_decision_tree(df, param_grid=None):
@@ -21,11 +23,20 @@ def train_decision_tree(df, param_grid=None):
 
     y_pred = clf.predict(X_test)
 
-    # Valutazione
+     # Valutazione
     print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
     print(classification_report(y_test, y_pred))
 
+    # Visualizza l'albero decisionale
+    plot_decision_tree(clf)
+
     return clf
+
+def plot_decision_tree(clf):
+    plt.figure(figsize=(20,10))
+    plot_tree(clf, filled=True, feature_names=['PCA1', 'PCA2', 'PCA3', 'Film_Duration', 'Is_movie', 'Is_TVshow'], class_names=['Non-preferred', 'Preferred'], rounded=True)
+    plt.savefig("output grafici/decision_tree_visualization.png")
+    plt.show()
 
 # Funzione per le preferenze dell'utente
 def predict_user_preference(df, clf):

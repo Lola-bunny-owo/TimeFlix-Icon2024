@@ -1,11 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import calendar
 from datetime import datetime, timedelta
 from fpdf import FPDF
-import json  # Importa il modulo JSON per salvare le preferenze
+import json 
 import random
-import re
 from csp import apply_backtracking
 from apprNonSup import recommend_based_on_embeddings
 global root
@@ -105,7 +103,7 @@ def update_duration_frame(content_type, duration_frame, min_duration_var, max_du
      # Imposta i valori predefiniti per min e max duration / seasons
     if content_type.get() == "Movie":
         min_duration_var.set(0)
-        max_duration_var.set(200)
+        max_duration_var.set(210)
     else:  # TV Show
         min_duration_var.set(1)
         max_duration_var.set(10)
@@ -129,40 +127,25 @@ def update_genre_list(content_type, genre_var, df):
 
 # Funzione che aggiorna dinamicamente il menù a discesa, che gestisce la selezione corrente
 def update_day_selection(day_var, days_list):
-    
     selected_day = day_var.get()
     
-    # Clear the existing options
+    # Pulisce le opzioni presenti
     day_dropdown['menu'].delete(0, 'end')
     
-    # Add the new options
+    # Aggiunge le nuove opzioni
     for day in days_list:
         day_dropdown['menu'].add_command(label=day, command=tk._setit(day_var, day))
 
-    # Set the default value (if necessary)
+    # Seleziona il valore di default
     if selected_day in days_list:
         day_var.set(selected_day)
     else:
         day_var.set(days_list[0])
 
-# Funzione che mostra i suggerimenti basati sugli embeddings dei generi
-def show_recommendations(df, selected_title):
-    # Prende i suggerimenti basati sugli embeddings dei generi
-    recommendations = recommend_based_on_embeddings(df, selected_title)
-
-    # Mostra i suggerimenti nell'UI
-    recommendation_frame = tk.LabelFrame(root, text="Recommended Content")
-    recommendation_frame.pack(fill="x", padx=5, pady=5)
-
-    for rec in recommendations:
-        tk.Label(recommendation_frame, text=rec).pack()
-
 # Funzione che estrae e formatta le info su film o serie TV.
 # Le info che vengono estratte sono: titolo, durata e genere
 def extract_title_duration_genres(recommendation):
     
-    # eventualmente qui dev'essere inserita una funzione che pulisce il dizionario (prima era clean_text)
-    # ma ci ho provato e non funziona. La soluzione più breve è cambiare il font del pdf
     # Gestisce il caso in cui recommendation sia un dizionario
     if isinstance(recommendation, dict):
         title = recommendation.get('Title', 'Unknown Title')
@@ -181,7 +164,7 @@ def extract_title_duration_genres(recommendation):
             return f"Title: {title}: Unknown Content"
 
     # Ritorna il contenuto originale se non corrisponde a nessun formato conosciuto
-    return str(recommendation)  # Converte qualsiasi altro tipo in stringa
+    return str(recommendation)
 
 # Funzione che estrae e formatta le info dell'altra funzione, con l'aggiunta di descrizione e classificazione
 def extract_title_duration_genres_extended(recommendation):
@@ -197,25 +180,25 @@ def extract_title_duration_genres_extended(recommendation):
 
 # Funzione che estrae il titolo di un contenuto suggerito.
 def extract_title_from_recommendation(recommendation):
-    # Check if recommendation is a valid dictionary with a 'Title' key
+    # Controlla se i suggerimenti sono dei dizionari validi e che sia presente il titolo
     if isinstance(recommendation, dict) and 'Title' in recommendation:
         return recommendation['Title']
     else:
         print(f"Error: The recommendation format is invalid: {recommendation}")
         return "Unknown Title"
 
-# Funzione per rimuovere i duplicati dai suggerimenti
+# Funzione che rimuove i duplicati dai suggerimenti
 def remove_duplicates(initial_recommendations, additional_recommendations):
-    # Extract titles from the initial recommendations
+    # Estrae i titoli dai suggerimenti iniziali
     initial_titles = [rec['Title'] for rec in initial_recommendations if isinstance(rec, dict) and 'Title' in rec]
 
-    # Filter out duplicates from the additional recommendations based on title
+    # Filtra i duplicati dai suggerimenti aggiuntivi in base al titolo
     filtered_additional = [
         rec for rec in additional_recommendations
         if isinstance(rec, dict) and 'Title' in rec and rec['Title'] not in initial_titles
     ]
 
-    # To ensure no duplicates in the additional recommendations themselves
+    # Per assicurare che non ci siano duplicati nei suggerimenti aggiuntivi..
     seen_titles = set()
     unique_additional = []
     for rec in filtered_additional:
@@ -275,22 +258,22 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
         # Genera 3 suggerimenti aggiuntivi rispettando il tipo di contenuto
         additional_recommendations = recommend_based_on_embeddings(df, selected_title, num_recommendations=3, content_type=content_type)
         
-        # Remove duplicates from additional recommendations
+        # Rimuove i duplicati dai suggerimenti aggiuntivi
         filtered_additional_recommendations = remove_duplicates(random_recommendations, additional_recommendations)
 
-        # If no additional recommendations are left, fetch backup recommendations
+        # Se non ci sono altri suggerimenti aggiuntivi, crea un backup dei suggerimenti
         if len(filtered_additional_recommendations) == 0:
             random_title = df[df['Is_TVshow' if Is_TVshow else 'Is_movie'] == 1]['Title'].sample(1).values[0]
             backup_recommendations = recommend_based_on_embeddings(df, random_title, num_recommendations=3, content_type=content_type)
             
-            # Ensure the backup recommendations have no duplicates
+            # Assicura che il backup dei suggerimenti non abbia duplicati
             filtered_additional_recommendations = remove_duplicates(random_recommendations, backup_recommendations)
 
-        # If backup recommendations are still empty, display fallback message
+        # Se i suggerimenti di backup sono ancora vuoti, mostra il messaggio
         if len(filtered_additional_recommendations) == 0:
             filtered_additional_recommendations = ["No additional recommendations available"]
 
-        # Display the recommendations and generate the PDF
+        # Mostra i suggerimenti e genera il pdf
         display_schedule(preferred_day, start_time, end_time, random_recommendations, root, filtered_additional_recommendations)
         generate_pdf(random_recommendations, filtered_additional_recommendations[:3], preferred_day, start_time, end_time)
     else:
@@ -300,7 +283,7 @@ def submit_preferences(df, content_type_var, min_duration_var, max_duration_var,
 def reset_fields(content_type_var, min_duration_var, max_duration_var, genre_var, day_var, start_time_var, end_time_var):
     content_type_var.set("Movie")
     min_duration_var.set(0)
-    max_duration_var.set(200)
+    max_duration_var.set(210)
     genre_var.selection_clear(0, tk.END)
         
     # Reset dei campi relativi al giorno e all'orario
@@ -314,31 +297,35 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
     calendar_window = tk.Toplevel(root)
     calendar_window.title("Weekly Schedule")
     calendar_window.configure(bg="#f7f7f7")
+    calendar_window.resizable(False, False)  # Impedisce il ridimensionamento sia orizzontale che verticale
     
     # Giorni della settimana
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     
-    # Trova il giorno corrente e l'inizio della settimana
-    today = datetime.now()
-    start_of_week = today - timedelta(days=today.weekday())  # L'inizio della settimana corrente (Monday)
-    
     # Configura il layout della griglia per espandersi
     for i, day_name in enumerate(days_of_week):
-        calendar_window.columnconfigure(i, weight=1)  # Altre colonne
+        # Imposta un peso maggiore per il giorno selezionato
+        if day_name == day:
+            calendar_window.columnconfigure(i, weight=70, minsize=200)  # Colonna selezionata più ampia
+        else:
+            calendar_window.columnconfigure(i, weight=1, minsize=100)
     
     # Header dei giorni della settimana
     header_frame = tk.Frame(calendar_window, bg="#333333")
     header_frame.grid(row=0, column=0, columnspan=7, sticky="ew")
+    
+    # Configura la larghezza delle colonne per permettere l'espansione
+    for i in range(7):
+        # Imposta un peso maggiore per la colonna del giorno selezionato
+        header_frame.grid_columnconfigure(i, weight=50 if days_of_week[i] == day else 1)
 
     # Mostra la settimana ed il calendario
     for i, day_name in enumerate(days_of_week):
-        current_day = start_of_week + timedelta(days=i)
-        date_str = current_day.strftime("%d %b %Y")
     
         # Crea e configura le label dei giorni della settimana
         label = tk.Label(
             header_frame,
-            text=f"{day_name}\n{date_str}",
+            text=f"{day_name}\n{(datetime.now() - timedelta(days=datetime.now().weekday() - i)).strftime('%d %b %Y')}",
             font=("Arial", 10, "bold"),
             bg="#3b3b3b" if day_name != day else "#6a8fb6",  # Cambia colore se è il giorno selezionato
             fg="white",
@@ -346,7 +333,8 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
             pady=5,
             borderwidth=1,
             relief="ridge",
-            wraplength=150
+            wraplength=0,
+            anchor="center"
         )
         label.grid(row=0, column=i, padx=2, pady=2, sticky="nsew")
         
@@ -362,7 +350,10 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
         borderwidth=1,
         relief="groove"
     )
-    time_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+    time_label.grid(row=1, column=days_of_week.index(day), padx=5, pady=5, sticky="nsew")
+
+    # Limita l'espansione dei suggerimenti con una larghezza massima 
+    max_width = 400
 
     # Mostra i 5 suggerimenti iniziali
     initial_label = tk.Label(
@@ -373,7 +364,7 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
         bg="#f7f7f7",
         pady=5
     )
-    initial_label.grid(row=2, column=0, padx=2, pady=2, sticky="nsew")
+    initial_label.grid(row=2, column=days_of_week.index(day), padx=2, pady=2, sticky="nsew")
 
     # Mostra il titolo, la durata, ed i generi per ogni suggerimento
     for i, rec in enumerate(recommendations):
@@ -384,9 +375,10 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
             padx=5,
             pady=5,
             relief="solid",
-            borderwidth=1
+            borderwidth=1,
+            width= max_width
         )
-        recommendation_frame.grid(row=i + 3, column=0, padx=2, pady=2, sticky="nsew")
+        recommendation_frame.grid(row=i + 3, column=days_of_week.index(day), padx=2, pady=2, sticky="nsew")
         recommendation_label = tk.Label(
             recommendation_frame,
             text=title_duration_genres,
@@ -407,10 +399,10 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
             bg="#f7f7f7",
             pady=5
         )
-        separator.grid(row=i + 4, column=0, padx=2, pady=5, sticky="nsew")
+        separator.grid(row=i + 4, column=days_of_week.index(day), padx=2, pady=5, sticky="nsew")
 
         for j, rec in enumerate(additional_recommendations):
-            # Apply the formatting function here
+            # Applica la funzione di formattazione
             title_duration_genres = extract_title_duration_genres(rec)
             additional_frame = tk.Frame(
                 calendar_window,
@@ -418,9 +410,10 @@ def display_schedule(day, start_time, end_time, recommendations, root, additiona
                 padx=5,
                 pady=5,
                 relief="solid",
-                borderwidth=1
+                borderwidth=1,
+                width= max_width
             )
-            additional_frame.grid(row=i + j + 5, column=0, padx=2, pady=2, sticky="nsew")
+            additional_frame.grid(row=i + j + 5, column=days_of_week.index(day), padx=2, pady=2, sticky="nsew")
             recommendation_label = tk.Label(
                 additional_frame,
                 text=title_duration_genres,
@@ -480,7 +473,7 @@ def create_interface(df):
     global day_dropdown
     root = tk.Tk()
     root.title("Netflix Recommendation System")
-
+    root.resizable(False, False)  # Impedisce il ridimensionamento sia orizzontale che verticale
     # Frame per il tipo di contenuto
     type_frame = tk.LabelFrame(root, text="Content Type")
     type_frame.pack(fill="x", padx=5, pady=5)
@@ -495,7 +488,7 @@ def create_interface(df):
     
     # Variabili per la durata
     min_duration_var = tk.IntVar(value=0)
-    max_duration_var = tk.IntVar(value=200)
+    max_duration_var = tk.IntVar(value=210)
     
     tk.Label(duration_frame, text="Min Duration").pack(side="left", padx=5)
     tk.Entry(duration_frame, textvariable=min_duration_var, width=5).pack(side="left", padx=5)
@@ -532,19 +525,6 @@ def create_interface(df):
     day_dropdown.pack()
     # Chiama la funzione per aggiornare la selezione dei giorni
     update_day_selection(day_var, days_list)
-
-    '''# Frame per la selezione dell'intervallo di tempo
-    time_frame = tk.LabelFrame(root, text="Preferred Time Interval")
-    time_frame.pack(fill="x", padx=5, pady=5)
-
-    # Variabili per l'orario di inizio e fine
-    start_time_var = tk.StringVar(value="00:00")
-    end_time_var = tk.StringVar(value="00:00")
-
-    tk.Label(time_frame, text="Start Time").pack(side="left", padx=5)
-    tk.Entry(time_frame, textvariable=start_time_var, width=5).pack(side="left", padx=5)
-    tk.Label(time_frame, text="End Time").pack(side="left", padx=5)
-    tk.Entry(time_frame, textvariable=end_time_var, width=5).pack(side="left", padx=5)'''
     
     create_time_frame(root)
 

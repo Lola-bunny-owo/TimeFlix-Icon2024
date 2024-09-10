@@ -1,21 +1,21 @@
-                                       Title                                                        Genre_Film  Film_Duration
-91                The Women and the Murderer                             [Documentaries, International Movies]           92.0
-159                           Love in a Puff                          [Comedies, Dramas, International Movies]          103.0
-253                                   Bombay                   [Dramas, International Movies, Romantic Movies]          135.0
-261  The Secret Diary of an Exchange Student                 [Comedies, International Movies, Romantic Movies]           97.0
-283                     Misha and the Wolves                             [Documentaries, International Movies]           90.0
-285                          The Railway Man                                    [Dramas, International Movies]          108.0
-293                                     Slay                 [Comedies, International Movies, Romantic Movies]           86.0
-302              City of God: 10 Years Later                             [Documentaries, International Movies]           69.0
-315                         Ije: The Journey                                    [Dramas, International Movies]          106.0
-394                          African America                [Dramas, Independent Movies, International Movies]           97.0
-428            Words Bubble Up Like Soda Pop  [Anime Features, Children & Family Movies, International Movies]           87.0
-468          The Guide to the Perfect Family                          [Comedies, Dramas, International Movies]          102.0
-483                              Last Summer                   [Dramas, International Movies, Romantic Movies]          102.0
-495                                Awon Boyz                             [Documentaries, International Movies]           38.0
-501                               Mama Drama                                    [Dramas, International Movies]          105.0
-518             Har Kisse Ke Hisse: Kaamyaab                                    [Dramas, International Movies]          105.0
-529               Return of the Prodigal Son                                    [Dramas, International Movies]          124.0
-572                                Hampstead                          [Comedies, Dramas, International Movies]          103.0
-580              Mobile Suit Gundam Hathaway        [Action & Adventure, Anime Features, International Movies]           96.0
-589                                 Red Joan                                    [Dramas, International Movies]          101.0
+                                                        Title                                                  Genre_Film  Film_Duration
+7                                                     Sankofa          [Dramas, Independent Movies, International Movies]          125.0
+12                                               Je Suis Karl                              [Dramas, International Movies]          127.0
+16        Europe's Most Dangerous Man: Otto Skorzeny in Spain                       [Documentaries, International Movies]           67.0
+24                                                      Jeans           [Comedies, International Movies, Romantic Movies]          166.0
+28                                                 Dark Skies                           [Horror Movies, Sci-Fi & Fantasy]           97.0
+30                                            Ankahi Kahaniya          [Dramas, Independent Movies, International Movies]          111.0
+35                             The Father Who Moves Mountains                   [Dramas, International Movies, Thrillers]          110.0
+36                                             The Stronghold          [Action & Adventure, Dramas, International Movies]          105.0
+38                                        Birth of the Dragon                                [Action & Adventure, Dramas]           96.0
+41                                                       Jaws                [Action & Adventure, Classic Movies, Dramas]          124.0
+43                                                     Jaws 3              [Action & Adventure, Horror Movies, Thrillers]           98.0
+44                                          Jaws: The Revenge              [Action & Adventure, Horror Movies, Thrillers]           91.0
+51  InuYasha the Movie 2: The Castle Beyond the Looking Glass  [Action & Adventure, Anime Features, International Movies]           99.0
+52         InuYasha the Movie 3: Swords of an Honorable Ruler  [Action & Adventure, Anime Features, International Movies]           99.0
+56                   Naruto Shippuden the Movie: Blood Prison  [Action & Adventure, Anime Features, International Movies]          102.0
+60                Naruto Shippuden: The Movie: The Lost Tower  [Action & Adventure, Anime Features, International Movies]           85.0
+68                                                 Schumacher        [Documentaries, International Movies, Sports Movies]          113.0
+73                                               King of Boys                              [Dramas, International Movies]          182.0
+78                                             Tughlaq Durbar                    [Comedies, Dramas, International Movies]          145.0
+79                                    Tughlaq Durbar (Telugu)                    [Comedies, Dramas, International Movies]          145.0

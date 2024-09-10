@@ -51,8 +51,8 @@ def pca(n_components, embeddings_scaled):
 def plot_explained_variance(explained_variance, title):
     plt.figure(figsize=(8, 6))
     plt.plot(range(1, len(explained_variance) + 1), explained_variance, marker='o')
-    plt.xlabel('Numero di Componenti Principali')
-    plt.ylabel('Varianza Spiegata Cumulativa')
+    plt.xlabel('Main components')
+    plt.ylabel('Cumulative explained variance')
     plt.title(f'Varianza Spiegata Cumulativa vs Numero di Componenti Principali per {title}')
     plt.grid(True)
     plt.show()
@@ -63,7 +63,7 @@ def apply_pca_and_plot(n_components, embeddings, title):
     # Applicazione della PCA
     embeddings_pca, explained_variance = pca(n_components, embeddings)
     print(f"\nGrafico della varianza spiegata cumulativa per {title} con {n_components} componenti: ")
-    ## plot_explained_variance(explained_variance, title)
+    plot_explained_variance(explained_variance, title)
     return embeddings_pca, explained_variance
 
 # Funzione per calcolare il numero di componenti principali necessarie per mantenere una certa varianza

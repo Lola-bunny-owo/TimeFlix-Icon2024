@@ -19,15 +19,15 @@ eda.dataset_info(df)
 eda.describe_data(df)
 
 # Grafico a barre per la differenza tra Film e Serie TV
-## df['type'].value_counts().plot(kind='bar', title="Movies and TV Shows Differences", figsize=(8, 6))
-## plt.show()
+df['type'].value_counts().plot(kind='bar', title="Differenze tra Film e Serie TV", figsize=(8, 6))
+plt.show()
 
 # Grafici a barre per la distribuzione del numero di film e serie TV per rating
-## eda.bar_plot(df, type_value='Movie')
-## eda.bar_plot(df, type_value='TV Show')
+eda.bar_plot(df, type_value='Movie')
+eda.bar_plot(df, type_value='TV Show')
 
 # Grafico dei generi di Film e Serie TV
-## eda.plot_combined_genres_by_type(df)
+eda.plot_combined_genres_by_type(df)
 
 ### Calcolo e management di skewness e kurtosis per la colonna duration_numeric_film
 eda.prepare_duration_columns(df)
@@ -37,15 +37,15 @@ skewness_film, kurt_film= eda.manage_skew(df, skewness_film, kurt_film, 'duratio
 eda.manage_kurt(kurt_film, 'duration_numeric_film')
 
 # Istogrammi per le due colonne
-## eda.plot_histogram(df, 'duration_numeric_film')
-## eda.plot_histogram(df, 'duration_numeric_shows')
+eda.plot_histogram(df, 'duration_numeric_film')
+eda.plot_histogram(df, 'duration_numeric_shows')
 
 
 # Trova gli outliers per i film e le serie TV usando i percentili
-print(f"Soglia impostata per gli outliers di 'duration_numeric_film' (99° percentile): ", df['duration_numeric_film'].quantile(0.99))
+print(f"Soglia impostata per gli outliers di 'duration_numeric_film' (99 percentile): ", df['duration_numeric_film'].quantile(0.99))
 duration_film_outliers = eda.find_outliers(df, 'duration_numeric_film', percentile=0.99)
 print(f"\nOutliers nella colonna duration_numeric_film:\n", duration_film_outliers)
-print(f"Soglia impostata per gli outliers di 'duration_numeric_shows' (99° percentile): ", df['duration_numeric_shows'].quantile(0.99))
+print(f"Soglia impostata per gli outliers di 'duration_numeric_shows' (99 percentile): ", df['duration_numeric_shows'].quantile(0.99))
 duration_shows_outliers = eda.find_outliers(df, 'duration_numeric_shows', percentile=0.99)
 print(f"\nOutliers nella colonna duration_numeric_shows:\n", duration_shows_outliers)
 
@@ -79,7 +79,7 @@ df.drop_duplicates(inplace=True)
 
 # Verifica finale dei valori nulli e verifica del dataset per tutte le colonne eccetto quelle escluse
 preprocessing.print_null_values(df, columns_to_exclude)
-print("\nPrime 10 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(10))
+print("\nPrime 5 righe del dataset dopo il preprocessing:\n",df.drop(columns= ['duration_numeric', 'duration_numeric_film','duration_numeric_shows']).head(5))
 
 # One-Hot Encoding per la colonna 'type', Embedding WORD2VEC per la colonna 'listed_in'
 df= preprocessing.one_hot_enc(df) 

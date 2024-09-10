@@ -42,8 +42,8 @@ def null_values(df, column):
 # Funzione per la stampa dei valori nulli
 def print_null_values(df, columns_to_exclude):
     print("\nNumero di valori mancanti per colonna:\n", df.drop(columns= columns_to_exclude).isnull().sum())
-    print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato e' null:\n",
-          df.drop(columns= columns_to_exclude).isnull().head(10))
+    print("\nStampa delle prime 5 righe del dataset, con true nelle posizioni in cui il dato e' null:\n",
+          df.drop(columns= columns_to_exclude).isnull().head(5))
 
 # Funzione per il One-Hot Encoding sulla colonna 'type'
 def one_hot_enc(df):
@@ -75,7 +75,6 @@ def w2v(df):
     genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
 
     print("\nEmbedding per alcuni generi:")    # Esempio
-    for genre in ['International Movies', 'Dramas']: 
         print(f"{genre}: {genre_embeddings[genre]}\n")
 
     # Creazione degli embedding medi per film e serie TV
@@ -146,6 +145,9 @@ def prepare_data_for_decision_tree(df):
     
     pca = PCA(n_components=n_components)  # PCA con numero di componenti massimo
     genre_embedding_pca = pca.fit_transform(genre_embedding_matrix)
+    explained_variance_ratio = pca.explained_variance_ratio_
+    print(f"\nExplained variance ratio: {explained_variance_ratio}\n")
+
 
     # Aggiungi le feature di genere ridotte e le feature esistenti al DataFrame
     X = np.column_stack([genre_embedding_pca, df[['Film_Duration', 'Is_movie', 'Is_TVshow']].values])

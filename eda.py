@@ -10,7 +10,6 @@ from scipy.stats import skew, kurtosis, zscore
 def dataset_info(df):
     
     print("\nVerifica se il dataset e' caricato correttamente stampandone le prime 3 righe: \n", df.head(3))
-    print("\nColonne presenti nel dataset:", df.columns)
     print("\nNumero di righe e colonne:", df.shape)
     print("\nInformazioni generali sul dataset:\n")
     df.info()
@@ -34,8 +33,8 @@ def plot_boxplot(df, column):
 def plot_histogram(df, column):
     plt.figure(figsize=(8, 6))
     df[column].hist(bins=30)
-    plt.xlabel('Valori')
-    plt.ylabel('Frequenza')
+    plt.xlabel('Values')
+    plt.ylabel('Frequency')
     plt.title(f'Istogramma della colonna {column}')
     plt.show()
 
@@ -47,7 +46,7 @@ def bar_plot(df, type_value):
     
     # Crea il bar plot
     plt.figure(figsize=(8,6))
-    ax = sns.countplot(x="rating", data=df_selection, palette="Set2", order=df_selection['rating'].value_counts().index[0:12])
+    ax = sns.countplot(x="rating", data=df_selection, hue="rating", palette="Set2", order=df_selection['rating'].value_counts().index[0:12], legend=False)
     ax.set_title(f"{type_value} Rating")
     ax.set_ylabel(f"Number of {type_value}s")
     ax.set_xlabel("Rating Category")
@@ -78,7 +77,7 @@ def plot_combined_genres_by_type(df):
     # Plot dei generi combinati
     plt.figure(figsize=(8, 6))
     sns.barplot(x='Count', y='index', hue='Genre Type', data=combined_genres, palette='viridis')
-    plt.title('Film and TV Series Genres Differences')
+    plt.title('Differenze sui generi tra Film e Serie TV')
     plt.xlabel('Count')
     plt.ylabel('Genre')
     plt.show()

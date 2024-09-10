@@ -42,7 +42,7 @@ def null_values(df, column):
 # Funzione per la stampa dei valori nulli
 def print_null_values(df, columns_to_exclude):
     print("\nNumero di valori mancanti per colonna:\n", df.drop(columns= columns_to_exclude).isnull().sum())
-    print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato è null:\n",
+    print("\nStampa delle prime 10 righe del dataset, con true nelle posizioni in cui il dato e' null:\n",
           df.drop(columns= columns_to_exclude).isnull().head(10))
 
 # Funzione per il One-Hot Encoding sulla colonna 'type'

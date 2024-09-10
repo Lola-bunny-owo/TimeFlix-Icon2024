@@ -70,7 +70,7 @@ print(f"\nOutliers sui film aggiornati - rimossi i film di durata superiore a {m
 print(updated_film_outliers[['title', 'duration_numeric_film']]) 
 
 updated_show_outliers = eda.find_outliers(df, 'duration_numeric_shows', percentile=0.99)
-print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con più di {manual_show_threshold} stagioni:\n")
+print(f"\nOutliers sulle serie TV aggiornati - rimosse le serie TV con piu' di {manual_show_threshold} stagioni:\n")
 print(updated_show_outliers[['title', 'duration_numeric_shows']])
 
 # Gestione dei valori nulli e dei duplicati
@@ -153,7 +153,7 @@ if not preferred_content.empty:
     with open('preferred_content_output.txt', 'w', encoding='utf-8') as f:
         f.write(preferred_content[['Title', 'Genre_Film', 'Film_Duration']].head(20).to_string())
 else:
-    print("Il risultato è stato predetto dal Decision Tree.")
+    print("Il risultato e' stato predetto dal Decision Tree.")
 
 print(df.columns)
 
@@ -181,7 +181,7 @@ model = appProb.train_naive_bayes(X, y)
 
 # Predizione su nuovi dati (ad esempio, ottieni i migliori orari)
 best_day, best_start_time, best_end_time = appProb.predict_best_time(model, le_day)
-print(f"\nL'utente è più propenso a guardare contenuti il {best_day} dalle {best_start_time} alle {best_end_time}.")
+print(f"\nL'utente e' piu' propenso a guardare contenuti il {best_day} dalle {best_start_time} alle {best_end_time}.")
 
 ####### 6. CREAZIONE DELL'INTERFACCIA GRAFICA E ACQUISIZIONE PREFERENZE  #######  
 

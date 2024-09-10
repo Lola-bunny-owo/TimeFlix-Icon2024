@@ -5,7 +5,6 @@ from sklearn.utils import resample
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
 
-
 #### Funzioni per la fase di preprocessing
 
 # Funzione per la gestione degli outliers attraverso le soglie manuali
@@ -49,8 +48,8 @@ def one_hot_enc(df):
     
     # One-Hot Encoding della colonna 'type' e aggiornamento del DataFrame df
     df = pd.get_dummies(df, columns=['type'])
-    # Mostra le prime righe del DataFrame aggiornato con la colonna 'type' one-hot encoded
-    print("\nPrime righe del DataFrame con la colonna 'type' one-hot encoded:")
+    # Mostra le prime righe del df aggiornato con la colonna 'type' one-hot encoded
+    print("\nPrime righe del dataset con la colonna 'type' one-hot encoded:")
     print(df[['title', 'type_Movie', 'type_TV Show']].head())
     return df
 

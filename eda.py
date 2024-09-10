@@ -22,13 +22,6 @@ def describe_data(df):
     print(df['release_year'].describe())
     print("\n\n", df.describe(include=[object]))
 
-# Funzione per la creazione di un box plot per una colonna specifica
-def plot_boxplot(df, column):
-    plt.figure(figsize=(8, 6))
-    sns.boxplot(x=df[column])
-    plt.title(f'Box Plot della colonna {column}')
-    plt.show()
-
 # Funzione per la creazione di un istogramma per una colonna specifica
 def plot_histogram(df, column):
     plt.figure(figsize=(8, 6))

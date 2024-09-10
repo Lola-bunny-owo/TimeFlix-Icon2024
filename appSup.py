@@ -26,7 +26,7 @@ def train_decision_tree(df):
     print(f"\nAccuracy: {accuracy}\n")
     print(classification_report(y_test, y_pred))
     
-    plot_decision_tree(clf)
+    # plot_decision_tree(clf)
 
     return clf
 

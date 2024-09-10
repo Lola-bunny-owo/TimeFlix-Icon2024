@@ -1,13 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 import eda 
 import preprocessing
 import apprNonSup
 import appSup
 import interface
 import appProb
-from sklearn.utils import resample
 
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')

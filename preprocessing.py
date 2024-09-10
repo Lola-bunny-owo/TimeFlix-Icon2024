@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.utils import resample
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
-from datetime import datetime
 
 
 #### Funzioni per la fase di preprocessing
@@ -75,6 +74,7 @@ def w2v(df):
     genre_embeddings = {genre: model.wv[genre] for genre in genres_vocab}
 
     print("\nEmbedding per alcuni generi:")    # Esempio
+    for genre in ['International Movies']:
         print(f"{genre}: {genre_embeddings[genre]}\n")
 
     # Creazione degli embedding medi per film e serie TV

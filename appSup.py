@@ -2,8 +2,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report
 from preprocessing import prepare_data_for_decision_tree
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Funzione per addestrare un albero decisionale
 def train_decision_tree(df, param_grid=None):

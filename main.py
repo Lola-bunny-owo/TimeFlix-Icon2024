@@ -7,6 +7,9 @@ import appSup
 import interface
 import appProb
 
+# Nota bene: ogni chiamata alle funzioni di stampa dei grafici è stata commentata,
+# per semplice velocità di esecuzione del programma.
+
 # Import del dataset
 df = pd.read_csv('dataset/netflix_titles.csv')
 
@@ -17,15 +20,15 @@ eda.dataset_info(df)
 eda.describe_data(df)
 
 # Grafico a barre per la differenza tra Film e Serie TV
-df['type'].value_counts().plot(kind='bar', title="Differenze tra Film e Serie TV", figsize=(8, 6))
-plt.show()
+#df['type'].value_counts().plot(kind='bar', title="Differenze tra Film e Serie TV", figsize=(8, 6))
+#plt.show()
 
 # Grafici a barre per la distribuzione del numero di film e serie TV per rating
-eda.bar_plot(df, type_value='Movie')
-eda.bar_plot(df, type_value='TV Show')
+#eda.bar_plot(df, type_value='Movie')
+#eda.bar_plot(df, type_value='TV Show')
 
 # Grafico dei generi di Film e Serie TV
-eda.plot_combined_genres_by_type(df)
+# eda.plot_combined_genres_by_type(df)
 
 ### Calcolo e management di skewness e kurtosis per la colonna duration_numeric_film
 eda.prepare_duration_columns(df)
@@ -35,8 +38,8 @@ skewness_film, kurt_film= eda.manage_skew(df, skewness_film, kurt_film, 'duratio
 eda.manage_kurt(kurt_film, 'duration_numeric_film')
 
 # Istogrammi per le due colonne
-eda.plot_histogram(df, 'duration_numeric_film')
-eda.plot_histogram(df, 'duration_numeric_shows')
+# eda.plot_histogram(df, 'duration_numeric_film')
+# eda.plot_histogram(df, 'duration_numeric_shows')
 
 
 # Trova gli outliers per i film e le serie TV usando i percentili

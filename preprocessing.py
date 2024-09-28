@@ -145,7 +145,7 @@ def prepare_data_for_decision_tree(df):
     pca = PCA(n_components=n_components)  # PCA con numero di componenti massimo
     genre_embedding_pca = pca.fit_transform(genre_embedding_matrix)
     explained_variance_ratio = pca.explained_variance_ratio_
-    print(f"\nExplained variance ratio: {explained_variance_ratio}\n")
+    print(f"\nRapporto di varianza spiegato: {explained_variance_ratio}\n")
 
 
     # Aggiungi le feature di genere ridotte e le feature esistenti al DataFrame

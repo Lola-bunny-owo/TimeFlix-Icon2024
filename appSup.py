@@ -48,6 +48,6 @@ def predict_user_preference(df, clf):
     if not preferred_content.empty:
         # Salva i contenuti preferiti in un file di testo
         preferred_content[['Title', 'user_preference']].to_csv('preferred_content_output.txt', encoding='utf-8', index=False)
-        print("Preferred content saved to 'preferred_content_output.txt'.")
+        print("I contenuti preferiti sono salvati nel file 'preferred_content_output.txt'.")
     
     return preferred_content

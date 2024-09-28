@@ -1,1 +1,1 @@
-{"content_type": "TV Show", "min_duration": 1, "max_duration": 10, "genres": ["British TV Shows"], "preferred_day": "Thursday", "start_time": "00:00", "end_time": "20:00"}
+{"content_type": "Movie", "min_duration": 50, "max_duration": 210, "genres": ["Anime Features", "Classic Movies"], "preferred_day": "Tuesday", "start_time": "00:00", "end_time": "00:00"}

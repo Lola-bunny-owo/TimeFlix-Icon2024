@@ -178,7 +178,7 @@ time_pref_dataset.to_csv('dataset/time_preferences_balanced.csv', index=False)
 X, y, le_day= preprocessing.preprocess_data(time_pref_dataset)
 
 # Addestramento del modello Naive Bayes
-model = appProb.train_naive_bayes(X, y)
+model, _, _ = appProb.train_naive_bayes_with_cv(X, y, cv=10)
 
 # Predizione su nuovi dati (ad esempio, ottieni i migliori orari)
 best_day, best_start_time, best_end_time = appProb.predict_best_time(model, le_day)

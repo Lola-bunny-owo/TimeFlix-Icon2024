@@ -19,8 +19,8 @@ def train_decision_tree_with_cv(df, cv=5):
     mean_scores = {metric: np.mean(cv_results[f'test_{metric}']) for metric in scoring}
     std_scores = {metric: np.std(cv_results[f'test_{metric}']) for metric in scoring}
 
- # Stampa i risultati
-    print("Risultati Cross-Validation:")
+    # Stampa i risultati
+    print("Risultati Cross-Validation per gli Alberi Decisionali, con k=5 folds:")
     print(f"Accuratezza Media: {mean_scores['accuracy']:.3f} +- {std_scores['accuracy']:.3f}")
     print(f"Precisione Media: {mean_scores['precision']:.3f} +- {std_scores['precision']:.3f}")
     print(f"Recall Media: {mean_scores['recall']:.3f} +- {std_scores['recall']:.3f}")
@@ -33,6 +33,7 @@ def train_decision_tree_with_cv(df, cv=5):
 
     return clf, mean_scores, std_scores
 
+# Funzione di predizione delle preferenze dell'utente
 def predict_user_preference(df, clf):
     # Prepara i dati per la predizione
     X_new, _ = prepare_data_for_decision_tree(df)

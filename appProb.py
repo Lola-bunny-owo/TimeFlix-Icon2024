@@ -1,35 +1,37 @@
 import pandas as pd
+import numpy as np
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import classification_report
 from preprocessing import convert_time_to_minutes, convert_minutes_to_time
 
 # Addestramento del modello Naive Bayes
-def train_naive_bayes(X, y):
-    
-    # Suddividi i dati in set di training e test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+def train_naive_bayes_with_cv(X, y, cv=10):
     
     # Inizializza e addestra il modello
     model = GaussianNB()
-    model.fit(X_train, y_train)
     
-    # Stampa il numero di campioni usati per l'addestramento e il test
-    print(f"\nModello addestrato su {len(X_train)} campioni.")
-    print(f"Testato su {len(X_test)} campioni.")
+    # Si definiscono le metriche, si esegue la c-v e si calcolano le metriche.
+    scoring = ['accuracy', 'precision', 'recall', 'f1']
+    cv_results = cross_validate(model, X, y, cv=cv, scoring=scoring, return_train_score=False)
     
-    # Predizione sui dati di test
-    y_pred = model.predict(X_test)
+    # Calcola media e deviazione standard delle metriche
+    mean_scores = {metric: np.mean(cv_results[f'test_{metric}']) for metric in scoring}
+    std_scores = {metric: np.std(cv_results[f'test_{metric}']) for metric in scoring}
     
-    # Calcola e stampa le metriche di valutazione
-    accuracy = accuracy_score(y_test, y_pred)
+    # Stampa i risultati
+    print("\nRisultati Cross-Validation per il Naive Bayes, con k=10 folds:")
+    print(f"Accuratezza Media: {mean_scores['accuracy']:.3f} +- {std_scores['accuracy']:.3f}")
+    print(f"Precisione Media: {mean_scores['precision']:.3f} +- {std_scores['precision']:.3f}")
+    print(f"Recall Media: {mean_scores['recall']:.3f} +- {std_scores['recall']:.3f}")
+    print(f"F1 Score Medio: {mean_scores['f1']:.3f} +- {std_scores['f1']:.3f}")
     
-    print(f"\nPerformance del modello:")
-    print(f"Accuracy: {accuracy:.4f}")
-    print(classification_report(y_test, y_pred))
-    
-    return model
-    
+    # Addestra il modello sull'intero dataset per ottenere il modello finale
+    model.fit(X, y)
+    print("\nReport di Classificazione sull'Intero Set di Training:\n")
+    print(classification_report(y, model.predict(X)))
+
+    return model, mean_scores, std_scores    
 
 # Funzione di predizione del momento migliore per guardare contenuti
 def predict_best_time(model, le_day):

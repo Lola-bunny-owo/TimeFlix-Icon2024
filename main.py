@@ -144,7 +144,7 @@ print("\nPrime 10 righe del dataset con 'user_preference' uguale a 1:")
 print(preferred_content[['Title', 'user_preference']].head(10))
 
 # Addestra il Decision Tree sul dataset preprocessato
-clf = appSup.train_decision_tree(df)
+clf, _, _ = appSup.train_decision_tree_with_cv(df)
 
 # Prevedi i contenuti preferiti in base al modello addestrato
 preferred_content = appSup.predict_user_preference(df, clf)

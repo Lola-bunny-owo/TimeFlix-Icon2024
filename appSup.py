@@ -19,16 +19,16 @@ def train_decision_tree_with_cv(df, cv=5):
     mean_scores = {metric: np.mean(cv_results[f'test_{metric}']) for metric in scoring}
     std_scores = {metric: np.std(cv_results[f'test_{metric}']) for metric in scoring}
 
-    # Stampa i risultati
-    print("Cross-Validation Results:")
-    print(f"Mean Accuracy: {mean_scores['accuracy']:.3f} +- {std_scores['accuracy']:.3f}")
-    print(f"Mean Precision: {mean_scores['precision']:.3f} +- {std_scores['precision']:.3f}")
-    print(f"Mean Recall: {mean_scores['recall']:.3f} +- {std_scores['recall']:.3f}")
-    print(f"Mean F1 Score: {mean_scores['f1']:.3f} +- {std_scores['f1']:.3f}")
+ # Stampa i risultati
+    print("Risultati Cross-Validation:")
+    print(f"Accuratezza Media: {mean_scores['accuracy']:.3f} +- {std_scores['accuracy']:.3f}")
+    print(f"Precisione Media: {mean_scores['precision']:.3f} +- {std_scores['precision']:.3f}")
+    print(f"Recall Media: {mean_scores['recall']:.3f} +- {std_scores['recall']:.3f}")
+    print(f"F1 Score Medio: {mean_scores['f1']:.3f} +- {std_scores['f1']:.3f}")
 
     # Addestra il modello sull'intero dataset per ottenere il modello finale
     clf.fit(X, y)
-    print("\nClassification Report on Full Training Set:\n")
+    print("\nReport di Classificazione sull'Intero Set di Training:\n")
     print(classification_report(y, clf.predict(X)))
 
     return clf, mean_scores, std_scores
